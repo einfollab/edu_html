@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3학년 수학 - 분수와 크기 비교</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@600;800;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', 'Gowun Dodum', sans-serif;
+            background-color: #f8fafc;
+            overflow: hidden; /* 스크롤 없이 한 화면 고정 */
+            user-select: none;
+        }
+
+        /* 큰 버튼 스타일 (최소 2cm 이상 - 약 80px 이상) */
+        .large-btn {
+            min-width: 100px;
+            min-height: 70px;
+            font-size: 28px;
+            font-weight: 800;
+            border-radius: 16px;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.15);
+            transition: all 0.1s ease;
+        }
+
+        .large-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.15);
+        }
+
+        .sm-btn {
+            min-width: 80px;
+            min-height: 60px;
+            font-size: 24px;
+            font-weight: 800;
+            border-radius: 12px;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+        }
+
+        /* 분수 형태 표현 */
+        .fraction-display {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 44px;
+            font-weight: 900;
+            line-height: 1.1;
+            padding: 0 10px;
+            min-width: 90px; /* 두 자리 숫자 분수도 넉넉하게 들어가는 고정 폭 */
+        }
+
+        .fraction-numerator {
+            border-bottom: 5px solid #1e293b;
+            width: 100%;
+            text-align: center;
+            padding-bottom: 2px;
+        }
+
+        .fraction-denominator {
+            padding-top: 2px;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* 막대 애니메이션 및 디자인 */
+        .bar-container {
+            border: 5px solid #334155;
+            border-radius: 14px;
+            background-color: #ffffff;
+            overflow: hidden;
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .bar-segment {
+            border-right: 4px dashed #94a3b8;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .bar-segment:last-child {
+            border-right: none;
+        }
+
+        .filled-top {
+            background-color: #3b82f6; /* 명확한 파란색 */
+            color: #ffffff;
+        }
+
+        .filled-bottom {
+            background-color: #10b981; /* 명확한 초록색 */
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between p-4 bg-slate-50 text-slate-800">
+
+    <!-- [위] 오늘의 학습 목표 (32px 이상, 한 문장) -->
+    <header class="w-full text-center bg-amber-200 border-4 border-amber-400 rounded-2xl py-3 px-6">
+        <h1 class="text-[34px] font-black text-amber-950 tracking-tight">
+            목표: 막대를 보고 분수를 읽고, 두 분수의 크기를 비교할 수 있어요
+        </h1>
+    </header>
+
+    <!-- [가운데] 두 분수 및 막대 비교 영역 -->
+    <main class="flex-1 flex flex-col justify-center items-center my-1 gap-2 w-full max-w-7xl mx-auto">
+        
+        <!-- === 위 막대 영역 === -->
+        <div class="w-full flex items-center justify-between gap-4 bg-white p-3 rounded-2xl border-2 border-slate-200 shadow-sm">
+            <!-- 왼쪽: 분수 & 설명 (고정 너비 w-[380px] 부여로 막대 시작점 통일) -->
+            <div class="flex items-center gap-3 w-[380px] shrink-0">
+                <div class="fraction-display text-blue-700">
+                    <div class="fraction-numerator" id="topNumeratorText">3</div>
+                    <div class="fraction-denominator" id="topDenominatorText">4</div>
+                </div>
+                <div class="overflow-hidden">
+                    <div class="text-[34px] font-black text-blue-700 whitespace-nowrap" id="topReadText">4분의 3</div>
+                    <div class="text-[22px] font-bold text-slate-500 whitespace-nowrap" id="topExplainText">4칸 중 3칸을 칠했어요</div>
+                </div>
+            </div>
+
+            <!-- 가운데: 막대 (동일 위치/길이 보장) -->
+            <div class="flex-1 h-20 bar-container flex relative" id="topBar"></div>
+
+            <!-- 오른쪽: 위 막대 조작 버튼 -->
+            <div class="flex gap-2 shrink-0">
+                <button onclick="changeTopDen(-1)" class="sm-btn bg-rose-500 hover:bg-rose-600 text-white border-b-4 border-rose-700">분모 −</button>
+                <button onclick="changeTopDen(1)" class="sm-btn bg-rose-500 hover:bg-rose-600 text-white border-b-4 border-rose-700">분모 +</button>
+                <button onclick="changeTopNum(-1)" class="sm-btn bg-sky-500 hover:bg-sky-600 text-white border-b-4 border-sky-700">분자 −</button>
+                <button onclick="changeTopNum(1)" class="sm-btn bg-sky-500 hover:bg-sky-600 text-white border-b-4 border-sky-700">분자 +</button>
+            </div>
+        </div>
+
+        <!-- === 아래 막대 영역 === -->
+        <div class="w-full flex items-center justify-between gap-4 bg-white p-3 rounded-2xl border-2 border-slate-200 shadow-sm">
+            <!-- 왼쪽: 분수 & 설명 (고정 너비 w-[380px] 부여로 위 막대와 시작 위치 완벽 일치) -->
+            <div class="flex items-center gap-3 w-[380px] shrink-0">
+                <div class="fraction-display text-emerald-700">
+                    <div class="fraction-numerator" id="bottomNumeratorText">1</div>
+                    <div class="fraction-denominator" id="bottomDenominatorText">2</div>
+                </div>
+                <div class="overflow-hidden">
+                    <div class="text-[34px] font-black text-emerald-700 whitespace-nowrap" id="bottomReadText">2분의 1</div>
+                    <div class="text-[22px] font-bold text-slate-500 whitespace-nowrap" id="bottomExplainText">2칸 중 1칸을 칠했어요</div>
+                </div>
+            </div>
+
+            <!-- 가운데: 막대 (위 막대와 정확히 동일한 폭 및 시작/끝점 보장) -->
+            <div class="flex-1 h-20 bar-container flex relative" id="bottomBar"></div>
+
+            <!-- 오른쪽: 아래 막대 조작 버튼 -->
+            <div class="flex gap-2 shrink-0">
+                <button onclick="changeBottomDen(-1)" class="sm-btn bg-rose-500 hover:bg-rose-600 text-white border-b-4 border-rose-700">분모 −</button>
+                <button onclick="changeBottomDen(1)" class="sm-btn bg-rose-500 hover:bg-rose-600 text-white border-b-4 border-rose-700">분모 +</button>
+                <button onclick="changeBottomNum(-1)" class="sm-btn bg-emerald-500 hover:bg-emerald-600 text-white border-b-4 border-emerald-700">분자 −</button>
+                <button onclick="changeBottomNum(1)" class="sm-btn bg-emerald-500 hover:bg-emerald-600 text-white border-b-4 border-emerald-700">분자 +</button>
+            </div>
+        </div>
+
+        <!-- 비교 문장 한 줄 (32px 이상) -->
+        <div class="w-full bg-indigo-50 border-2 border-indigo-200 rounded-2xl py-3 text-center my-1">
+            <div class="text-[36px] font-black text-indigo-950" id="compareSentence">
+                4분의 3이 2분의 1보다 커요
+            </div>
+        </div>
+
+        <!-- 피드백 / 안내 한 줄 메시지 (32px 이상) -->
+        <div id="messageBox" class="text-[32px] font-bold text-red-600 min-h-[44px] flex items-center justify-center text-center">
+            <!-- 오류 시 지정된 한 줄 안내 문구 출력 -->
+        </div>
+    </main>
+
+    <!-- [아래] 다시 하기 버튼 -->
+    <footer class="w-full flex justify-center items-center py-1">
+        <button onclick="resetToDefault()" class="large-btn bg-slate-600 hover:bg-slate-700 text-white border-b-8 border-slate-800 px-10">
+            다시 하기
+        </button>
+    </footer>
+
+    <script>
+        // 위 막대 상태 변수 (기본값: 4분의 3)
+        let topDen = 4;
+        let topNum = 3;
+
+        // 아래 막대 상태 변수 (기본값: 2분의 1)
+        let bottomDen = 2;
+        let bottomNum = 1;
+
+        // 화면 요소 참조
+        const topDenominatorText = document.getElementById('topDenominatorText');
+        const topNumeratorText = document.getElementById('topNumeratorText');
+        const topReadText = document.getElementById('topReadText');
+        const topExplainText = document.getElementById('topExplainText');
+        const topBar = document.getElementById('topBar');
+
+        const bottomDenominatorText = document.getElementById('bottomDenominatorText');
+        const bottomNumeratorText = document.getElementById('bottomNumeratorText');
+        const bottomReadText = document.getElementById('bottomReadText');
+        const bottomExplainText = document.getElementById('bottomExplainText');
+        const bottomBar = document.getElementById('bottomBar');
+
+        const compareSentence = document.getElementById('compareSentence');
+        const messageBox = document.getElementById('messageBox');
+
+        // 전체 UI 업데이트
+        function updateUI() {
+            // 1. 위 막대 텍스트 & 그림
+            topDenominatorText.textContent = topDen;
+            topNumeratorText.textContent = topNum;
+            topReadText.textContent = `${topDen}분의 ${topNum}`;
+            topExplainText.textContent = `${topDen}칸 중 ${topNum}칸을 칠했어요`;
+            renderBar(topBar, topDen, topNum, 'filled-top');
+
+            // 2. 아래 막대 텍스트 & 그림
+            bottomDenominatorText.textContent = bottomDen;
+            bottomNumeratorText.textContent = bottomNum;
+            bottomReadText.textContent = `${bottomDen}분의 ${bottomNum}`;
+            bottomExplainText.textContent = `${bottomDen}칸 중 ${bottomNum}칸을 칠했어요`;
+            renderBar(bottomBar, bottomDen, bottomNum, 'filled-bottom');
+
+            // 3. 크기 비교 문장 업데이트
+            updateComparison();
+        }
+
+        // 막대 그리기 함수
+        function renderBar(container, den, num, fillClass) {
+            container.innerHTML = '';
+            for (let i = 0; i < den; i++) {
+                const segment = document.createElement('div');
+                const isFilled = i < num;
+                segment.className = `flex-1 h-full bar-segment ${isFilled ? fillClass : ''}`;
+                segment.textContent = isFilled ? `${i + 1}` : '';
+                container.appendChild(segment);
+            }
+        }
+
+        // 숫자 받침 유무를 판별하는 함수 (한국어 수 읽기 기준)
+        // 받침 있음 (True): 0(영), 1(일), 3(삼), 6(육), 7(칠), 8(팔), 10(십), 11(십일)
+        // 받침 없음 (False): 2(이), 4(사), 5(오), 9(구), 12(십이)
+        function hasBatchim(num) {
+            const batchimNumbers = [0, 1, 3, 6, 7, 8, 10, 11];
+            return batchimNumbers.includes(num);
+        }
+
+        // 조사 선택 함수
+        function getJosa(num, type) {
+            const batchim = hasBatchim(num);
+            if (type === '이/가') {
+                return batchim ? '이' : '가';
+            }
+            if (type === '과/와') {
+                return batchim ? '과' : '와';
+            }
+            if (type === '은/는') {
+                return batchim ? '은' : '는';
+            }
+            return '';
+        }
+
+        // 크기 비교 계산 및 문장 업데이트
+        function updateComparison() {
+            const topVal = topNum / topDen;
+            const bottomVal = bottomNum / bottomDen;
+
+            const topStr = `${topDen}분의 ${topNum}`;
+            const bottomStr = `${bottomDen}분의 ${bottomNum}`;
+
+            const topIga = getJosa(topNum, '이/가');
+            const bottomIga = getJosa(bottomNum, '이/가');
+            const topGwaWa = getJosa(topNum, '과/와');
+            const bottomEunNeun = getJosa(bottomNum, '은/는');
+
+            if (topVal > bottomVal) {
+                compareSentence.textContent = `${topStr}${topIga} ${bottomStr}보다 커요`;
+            } else if (topVal < bottomVal) {
+                compareSentence.textContent = `${bottomStr}${bottomIga} ${topStr}보다 커요`;
+            } else {
+                compareSentence.textContent = `${topStr}${topGwaWa} ${bottomStr}${bottomEunNeun} 크기가 같아요`;
+            }
+        }
+
+        // 경고 메시지 표시
+        function showMessage(msg) {
+            messageBox.textContent = msg;
+        }
+
+        // 메시지 초기화
+        function clearMessage() {
+            messageBox.textContent = '';
+        }
+
+        // === 위 막대 버튼 조작 이벤트 ===
+        function changeTopDen(delta) {
+            clearMessage();
+            const nextDen = topDen + delta;
+
+            if (delta > 0) {
+                if (nextDen > 12) {
+                    showMessage('12칸까지만 나눌 수 있어요.');
+                    return;
+                }
+            } else {
+                if (nextDen < 2) {
+                    showMessage('2칸보다 적게 나눌 수 없어요.');
+                    return;
+                }
+                if (topNum > nextDen) {
+                    showMessage('분자가 분모보다 클 수 없어요. 분자를 먼저 줄여 보세요.');
+                    return;
+                }
+            }
+
+            topDen = nextDen;
+            updateUI();
+        }
+
+        function changeTopNum(delta) {
+            clearMessage();
+            const nextNum = topNum + delta;
+
+            if (delta > 0) {
+                if (nextNum > topDen) {
+                    showMessage('모든 칸을 칠했어요.');
+                    return;
+                }
+            } else {
+                if (nextNum < 0) {
+                    showMessage('칠한 칸이 없어요.');
+                    return;
+                }
+            }
+
+            topNum = nextNum;
+            updateUI();
+        }
+
+        // === 아래 막대 버튼 조작 이벤트 ===
+        function changeBottomDen(delta) {
+            clearMessage();
+            const nextDen = bottomDen + delta;
+
+            if (delta > 0) {
+                if (nextDen > 12) {
+                    showMessage('12칸까지만 나눌 수 있어요.');
+                    return;
+                }
+            } else {
+                if (nextDen < 2) {
+                    showMessage('2칸보다 적게 나눌 수 없어요.');
+                    return;
+                }
+                if (bottomNum > nextDen) {
+                    showMessage('분자가 분모보다 클 수 없어요. 분자를 먼저 줄여 보세요.');
+                    return;
+                }
+            }
+
+            bottomDen = nextDen;
+            updateUI();
+        }
+
+        function changeBottomNum(delta) {
+            clearMessage();
+            const nextNum = bottomNum + delta;
+
+            if (delta > 0) {
+                if (nextNum > bottomDen) {
+                    showMessage('모든 칸을 칠했어요.');
+                    return;
+                }
+            } else {
+                if (nextNum < 0) {
+                    showMessage('칠한 칸이 없어요.');
+                    return;
+                }
+            }
+
+            bottomNum = nextNum;
+            updateUI();
+        }
+
+        // 다시 하기 (초기화: 위 3/4, 아래 1/2)
+        function resetToDefault() {
+            clearMessage();
+            topDen = 4;
+            topNum = 3;
+            bottomDen = 2;
+            bottomNum = 1;
+            updateUI();
+        }
+
+        // 초기 화면 설정
+        window.onload = function() {
+            updateUI();
+        };
+    </script>
+</body>
+</html>

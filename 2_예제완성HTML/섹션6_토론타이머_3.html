@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>중학교 국어 토론 수업 타이머</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: '#0F172A',      /* 진한 남색 */
+                        darkGray: '#334155',  /* 회색 */
+                        lightGray: '#F1F5F9', /* 밝은 회색 */
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 기본 폰트 크기 보장 및 텍스트 드래그 방지 */
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        /* 버튼 최소 크기 보장 (가로세로 2cm 이상 - 일반 화면 약 80px 이상) */
+        .btn-large {
+            min-width: 90px;
+            min-height: 80px;
+        }
+        @media (min-width: 768px) {
+            .btn-large {
+                min-width: 140px;
+                min-height: 84px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-navy text-white h-screen w-screen overflow-hidden flex flex-col justify-between p-4 md:p-6 select-none">
+
+    <!-- [위] 오늘의 목표 & 토론 주제 -->
+    <header class="w-full text-center flex flex-col items-center justify-center space-y-2 border-b-2 border-slate-700 pb-3">
+        <!-- 목표 (32px 이상, 모바일에서도 시인성 확보) -->
+        <div class="w-full bg-darkGray rounded-xl py-3 px-4 text-white text-2xl md:text-3xl font-bold tracking-wide shadow-md">
+            목표: 상대 주장을 정확히 듣고 한 줄로 요약할 수 있다
+        </div>
+        <!-- 주제 -->
+        <div class="text-xl md:text-2xl text-slate-300 font-semibold mt-1">
+            주제: 중학교에서 수업 시간에 휴대폰 사용을 허용해야 한다
+        </div>
+    </header>
+
+    <!-- [가운데] 현재 단계 이름, 남은 시간, 다음 단계 이름 -->
+    <main class="flex-1 flex flex-col items-center justify-center my-auto py-2 text-center">
+        <!-- 오류/알림 메시지 표시 영역 (조건 불일치 시 표시용) -->
+        <div id="errorMessage" class="hidden text-red-400 font-bold text-xl md:text-2xl mb-2 bg-slate-800 px-4 py-2 rounded-lg border border-red-500">
+            <!-- 오류 알림 한 줄 -->
+        </div>
+
+        <!-- 1. 단계 이름 (화면에서 가장 크게) -->
+        <h1 id="currentStageName" class="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white tracking-wider mb-2 sm:mb-4">
+            1. 찬성 주장
+        </h1>
+
+        <!-- 2. 남은 시간 (큰 숫자) -->
+        <div id="timerDisplay" class="text-7xl sm:text-8xl md:text-9xl lg:text-[10rem] font-mono font-black text-slate-100 my-1 sm:my-2 tracking-tight">
+            02:00
+        </div>
+
+        <!-- 시간이 다 됐을 때만 보이는 한 줄 안내 -->
+        <div id="timeOutMessage" class="hidden text-amber-300 font-bold text-2xl sm:text-3xl md:text-4xl my-2 bg-slate-800 px-6 py-2 rounded-xl border-2 border-amber-400 animate-pulse">
+            시간 끝. 마지막 문장을 마무리하세요.
+        </div>
+
+        <!-- 마지막 단계에서만 보이는 요약 안내 -->
+        <div id="summaryGuideMessage" class="hidden text-sky-300 font-bold text-2xl sm:text-3xl md:text-4xl my-2 bg-slate-800 px-6 py-2 rounded-xl border-2 border-sky-400">
+            상대 팀 주장을 한 줄로 적어 보세요
+        </div>
+
+        <!-- 토론 완전히 종료 시 보이는 안내 -->
+        <div id="endMessage" class="hidden text-emerald-300 font-bold text-2xl sm:text-3xl md:text-4xl my-2 bg-slate-800 px-6 py-2 rounded-xl border-2 border-emerald-400">
+            토론이 끝났습니다. 요약한 문장을 짝과 바꿔 읽어 보세요.
+        </div>
+
+        <!-- 3. 다음 단계 이름 (작게) -->
+        <div id="nextStageDisplay" class="text-xl sm:text-2xl md:text-3xl text-slate-400 font-medium mt-2 bg-darkGray px-6 py-2 rounded-full border border-slate-600">
+            다음: 반대 주장
+        </div>
+    </main>
+
+    <!-- [아래] 버튼 조작부 (가로세로 2cm 이상 터치 가능) -->
+    <footer class="w-full max-w-4xl mx-auto pt-2 pb-2">
+        <div class="grid grid-cols-3 gap-3 md:gap-6 justify-center items-center">
+            <!-- 시작 / 일시정지 버튼 -->
+            <button id="startBtn" onclick="toggleTimer()" 
+                class="btn-large bg-slate-100 hover:bg-white text-navy font-black text-xl sm:text-2xl md:text-3xl rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center cursor-pointer border-4 border-slate-300">
+                시작
+            </button>
+            
+            <!-- 다음 차례 버튼 -->
+            <button id="nextBtn" onclick="nextStage()" 
+                class="btn-large bg-darkGray hover:bg-slate-600 text-white font-bold text-xl sm:text-2xl md:text-3xl rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center cursor-pointer border-4 border-slate-500">
+                다음 차례
+            </button>
+
+            <!-- 다시 하기 버튼 -->
+            <button id="resetBtn" onclick="resetAll()" 
+                class="btn-large bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xl sm:text-2xl md:text-3xl rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center cursor-pointer border-4 border-slate-600">
+                다시 하기
+            </button>
+        </div>
+    </footer>
+
+    <!-- 스크립트: 데이터 구조 및 화면 상태 관리 -->
+    <script>
+        // 토론 단계 5개 정보 정의
+        const stages = [
+            { id: 1, name: "1. 찬성 주장", time: 120, next: "반대 주장" },
+            { id: 2, name: "2. 반대 주장", time: 120, next: "찬성 반론" },
+            { id: 3, name: "3. 찬성 반론", time: 60,  next: "반대 반론" },
+            { id: 4, name: "4. 반대 반론", time: 60,  next: "상대 주장 한 줄 요약" },
+            { id: 5, name: "5. 상대 주장 한 줄 요약", time: 60, next: "없음" }
+        ];
+
+        let currentStageIndex = 0; // 첫 단계 '찬성 주장 2:00' 설정
+        let remainingSeconds = stages[0].time;
+        let timerInterval = null;
+        let isRunning = false;
+        let autoTransitionTimeout = null;
+
+        // 화면 요소 참조
+        const stageNameEl = document.getElementById("currentStageName");
+        const timerDisplayEl = document.getElementById("timerDisplay");
+        const nextStageDisplayEl = document.getElementById("nextStageDisplay");
+        const startBtnEl = document.getElementById("startBtn");
+        const errorMsgEl = document.getElementById("errorMessage");
+        const timeOutMsgEl = document.getElementById("timeOutMessage");
+        const summaryGuideMsgEl = document.getElementById("summaryGuideMessage");
+        const endMsgEl = document.getElementById("endMessage");
+
+        // 화면 업데이트 함수
+        function updateDisplay() {
+            const stage = stages[currentStageIndex];
+            stageNameEl.textContent = stage.name;
+            
+            // 분:초 포맷팅
+            const mins = Math.floor(remainingSeconds / 60).toString().padStart(2, '0');
+            const secs = (remainingSeconds % 60).toString().padStart(2, '0');
+            timerDisplayEl.textContent = `${mins}:${secs}`;
+
+            // 다음 단계 표시
+            nextStageDisplayEl.textContent = `다음: ${stage.next}`;
+
+            // 마지막 단계(5단계) 안내 메시지 제어
+            if (currentStageIndex === 4) {
+                summaryGuideMsgEl.classList.remove("hidden");
+            } else {
+                summaryGuideMsgEl.classList.add("hidden");
+            }
+        }
+
+        // 한 줄 오류/알림 메시지 출력 함수
+        function showError(message) {
+            if (message) {
+                errorMsgEl.textContent = message;
+                errorMsgEl.classList.remove("hidden");
+            } else {
+                errorMsgEl.classList.add("hidden");
+            }
+        }
+
+        // 시간 완료 / 종료 메시지 표시 관리
+        function hideAllStatusMessages() {
+            timeOutMsgEl.classList.add("hidden");
+            endMsgEl.classList.add("hidden");
+        }
+
+        // 타이머 멈춤 및 시작버튼 초기화
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            if (autoTransitionTimeout) {
+                clearTimeout(autoTransitionTimeout);
+                autoTransitionTimeout = null;
+            }
+            isRunning = false;
+            startBtnEl.textContent = "시작";
+            startBtnEl.classList.remove("bg-amber-200");
+            startBtnEl.classList.add("bg-slate-100");
+        }
+
+        // 타이머 시작 / 일시정지
+        function toggleTimer() {
+            showError(""); // 에러 초기화
+
+            if (isRunning) {
+                // 일시정지
+                stopTimer();
+            } else {
+                // 이미 토론이 다 끝나서 마지막 0초에 있는 경우
+                if (currentStageIndex === stages.length - 1 && remainingSeconds <= 0) {
+                    showError("토론이 종료되었습니다. 다시 시작하려면 '다시 하기'를 누르세요.");
+                    return;
+                }
+                
+                hideAllStatusMessages();
+
+                // 타이머 동작 시작 (1초에 1씩 감소)
+                isRunning = true;
+                startBtnEl.textContent = "일시정지";
+                startBtnEl.classList.remove("bg-slate-100");
+                startBtnEl.classList.add("bg-amber-200");
+
+                timerInterval = setInterval(() => {
+                    if (remainingSeconds > 0) {
+                        remainingSeconds--;
+                        updateDisplay();
+
+                        // 0:00에 도달했을 때
+                        if (remainingSeconds === 0) {
+                            stopTimer();
+
+                            if (currentStageIndex < stages.length - 1) {
+                                // 1~4단계: 시간 끝 안내를 2초 보여 준 뒤 다음 단계로 자동 변경 및 정지
+                                timeOutMsgEl.classList.remove("hidden");
+                                autoTransitionTimeout = setTimeout(() => {
+                                    timeOutMsgEl.classList.add("hidden");
+                                    currentStageIndex++;
+                                    remainingSeconds = stages[currentStageIndex].time;
+                                    updateDisplay();
+                                }, 2000);
+                            } else {
+                                // 5단계(마지막 단계) 종료 시 끝 안내 표시 후 정지
+                                summaryGuideMsgEl.classList.add("hidden");
+                                endMsgEl.classList.remove("hidden");
+                            }
+                        }
+                    }
+                }, 1000);
+            }
+        }
+
+        // 다음 차례 이동
+        function nextStage() {
+            showError("");
+            hideAllStatusMessages();
+            stopTimer(); // 이전 단계 타이머 즉시 정지
+
+            if (currentStageIndex < stages.length - 1) {
+                currentStageIndex++;
+                remainingSeconds = stages[currentStageIndex].time;
+                updateDisplay();
+            } else {
+                // 이미 마지막 단계라면 토론 종료 안내 표시
+                summaryGuideMsgEl.classList.add("hidden");
+                endMsgEl.classList.remove("hidden");
+            }
+        }
+
+        // 다시 하기 (첫 단계 '찬성 주장 2:00'으로 돌아가고 멈춤)
+        function resetAll() {
+            showError("");
+            hideAllStatusMessages();
+            stopTimer();
+
+            currentStageIndex = 0;
+            remainingSeconds = stages[0].time;
+            updateDisplay();
+        }
+
+        // 페이지 로드 시 초기 배치 상태 보장
+        window.onload = function() {
+            updateDisplay();
+        };
+    </script>
+</body>
+</html>

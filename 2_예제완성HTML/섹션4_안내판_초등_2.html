@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘의 국어</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 초등학교 1학년 가독성을 위한 기본 폰트 설정 및 화면 고정 */
+        body {
+            font-family: 'Malgun Gothic', 'Nanum Gothic', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        /* 스크롤 없이 한 화면에 딱 맞게 고정 */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #FFFFFF;
+        }
+
+        /* 32px 이상의 시원하고 큰 글씨 설정 (맨 뒷자리에서도 잘 보이도록 상향) */
+        .text-title {
+            font-size: clamp(32px, 3.2vw, 42px);
+        }
+
+        .text-goal {
+            font-size: clamp(44px, 5.5vw, 72px);
+        }
+
+        .text-btn {
+            font-size: clamp(36px, 4vw, 56px);
+        }
+
+        .text-btn-icon {
+            font-size: clamp(72px, 8vw, 112px);
+        }
+
+        /* TV 화면용 초대형 버튼 스타일 */
+        .btn-xl {
+            min-height: 240px;
+            border-width: 6px;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+
+        .btn-xl:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between items-center p-6 lg:p-10 text-black">
+
+    <!-- [상단] 제목 및 오늘의 목표 (화면에서 가장 크고 굵게 표시) -->
+    <header class="w-full text-center flex flex-col items-center mt-2">
+        <!-- 제목 -->
+        <h1 class="text-title font-extrabold text-black mb-2 tracking-tight">
+            오늘의 국어
+        </h1>
+        
+        <!-- 목표 (화면에서 가장 크고 굵게) -->
+        <div class="w-full max-w-7xl bg-white border-4 border-black rounded-3xl p-6 shadow-sm">
+            <p class="text-goal font-black text-black leading-tight break-keep">
+                받침 없는 글자를 바르게 읽고 쓸 수 있어요
+            </p>
+        </div>
+    </header>
+
+    <!-- [중앙] 그림 버튼 3개 (바탕색 변경, 그림은 글자보다 2배 크게 위로 배치) -->
+    <main class="w-full max-w-7xl my-auto">
+        <div class="grid grid-cols-3 gap-6 lg:gap-10 w-full">
+            
+            <!-- 버튼 1: 알아요 (연한 초록) -->
+            <button type="button" class="btn-xl bg-emerald-100 hover:bg-emerald-200 text-black font-extrabold rounded-3xl border-emerald-500 shadow-md flex flex-col items-center justify-center gap-2 p-6">
+                <span class="text-btn-icon leading-none">😀</span>
+                <span class="text-btn whitespace-nowrap mt-2">알아요</span>
+            </button>
+
+            <!-- 버튼 2: 조금 (연한 노랑) -->
+            <button type="button" class="btn-xl bg-amber-100 hover:bg-amber-200 text-black font-extrabold rounded-3xl border-amber-400 shadow-md flex flex-col items-center justify-center gap-2 p-6">
+                <span class="text-btn-icon leading-none">🤔</span>
+                <span class="text-btn whitespace-nowrap mt-2">조금</span>
+            </button>
+
+            <!-- 버튼 3: 몰라요 (연한 주황) -->
+            <button type="button" class="btn-xl bg-orange-100 hover:bg-orange-200 text-black font-extrabold rounded-3xl border-orange-400 shadow-md flex flex-col items-center justify-center gap-2 p-6">
+                <span class="text-btn-icon leading-none">😥</span>
+                <span class="text-btn whitespace-nowrap mt-2">몰라요</span>
+            </button>
+
+        </div>
+    </main>
+
+    <!-- [하단] 다시 하기 버튼 -->
+    <footer class="w-full text-center mb-2">
+        <button type="button" class="bg-gray-200 hover:bg-gray-300 text-black font-extrabold text-title px-14 py-5 rounded-2xl border-4 border-black active:bg-gray-400 transition-colors">
+            다시 하기
+        </button>
+    </footer>
+
+</body>
+</html>

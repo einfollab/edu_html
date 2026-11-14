@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>초등학교 3학년 과학 - 생각-짝-나눔</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body {
+            font-family: 'Pretendard', sans-serif;
+            user-select: none;
+        }
+        /* TV 화면 스크롤 방지 및 전체 화면 핏 */
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background-color: #F8FAFC;
+        }
+        /* 가로세로 2cm 이상 (약 80px 이상) 버튼 보장 */
+        .large-btn {
+            min-width: 140px;
+            min-height: 80px;
+            font-size: 2rem; /* 32px 이상 */
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between p-6 text-gray-800">
+
+    <!-- [위] 목표 및 질문 영역 -->
+    <header class="w-full flex flex-col items-center gap-4 text-center">
+        <!-- 목표 (맨 위, 크게 강조) -->
+        <div class="w-full bg-blue-50 border-4 border-blue-400 rounded-3xl p-4 shadow-sm">
+            <span class="bg-blue-600 text-white font-bold text-2xl px-4 py-1 rounded-full uppercase tracking-wider inline-block mb-1">오늘의 목표</span>
+            <h1 class="text-4xl md:text-5xl font-black text-blue-950 leading-tight">
+                자석이 쓰이는 곳을 찾아 짝에게 설명할 수 있어요
+            </h1>
+        </div>
+
+        <!-- 질문 -->
+        <div class="w-full bg-amber-50 border-4 border-amber-300 rounded-3xl p-4 shadow-sm">
+            <span class="bg-amber-500 text-white font-bold text-xl px-4 py-1 rounded-full uppercase tracking-wider inline-block mb-1">오늘의 질문</span>
+            <p class="text-3xl md:text-4xl font-extrabold text-amber-950">
+                우리 집과 교실에서 자석은 어디에 쓰일까요?
+            </p>
+        </div>
+    </header>
+
+    <!-- [가운데] 단계, 남은 시간, 타이머 막대 -->
+    <main class="w-full flex flex-col items-center justify-center my-auto gap-6">
+        <!-- 단계 이름 3개 (지금 단계만 진하게 강조) -->
+        <div class="grid grid-cols-3 gap-4 w-full max-w-5xl">
+            <!-- 단계 1: 활성화 (진하게) -->
+            <div id="step-1" class="flex items-center justify-center p-4 rounded-2xl border-4 transition-all duration-300 border-indigo-600 bg-indigo-600 text-white shadow-lg scale-105">
+                <span class="text-3xl md:text-4xl font-black text-center">🤔 혼자 생각 1분</span>
+            </div>
+            
+            <!-- 단계 2: 비활성화 -->
+            <div id="step-2" class="flex items-center justify-center p-4 rounded-2xl border-4 border-gray-200 bg-gray-100 text-gray-400 opacity-60">
+                <span class="text-3xl md:text-4xl font-bold text-center">🗣️ 짝과 이야기 2분</span>
+            </div>
+            
+            <!-- 단계 3: 비활성화 -->
+            <div id="step-3" class="flex items-center justify-center p-4 rounded-2xl border-4 border-gray-200 bg-gray-100 text-gray-400 opacity-60">
+                <span class="text-3xl md:text-4xl font-bold text-center">🙌 다 같이 나눔 1분</span>
+            </div>
+        </div>
+
+        <!-- 남은 시간 (큰 숫자, 32px 대폭 초과: 120px) -->
+        <div class="text-center">
+            <div id="timer-display" class="text-[120px] font-black tracking-wider text-slate-900 leading-none drop-shadow-md">
+                1:00
+            </div>
+        </div>
+
+        <!-- 타이머 가로 막대 (꽉 찬 상태로 정지) -->
+        <div class="w-full max-w-5xl bg-gray-200 rounded-full h-8 overflow-hidden border-2 border-gray-300 p-1">
+            <div id="progress-bar" class="bg-indigo-600 h-full rounded-full transition-all duration-300 w-full"></div>
+        </div>
+
+        <!-- 오안내 / 상태 안내 메시지 (에러 시 한 줄로 출력) -->
+        <div id="error-message" class="text-red-500 text-2xl font-bold h-8 text-center" aria-live="polite"></div>
+    </main>
+
+    <!-- [아래] 조작 버튼 (2cm 이상 대형 사이즈) -->
+    <footer class="w-full flex justify-center items-center gap-8 pb-4">
+        <!-- 시작 버튼 -->
+        <button id="start-btn" onclick="handleStart()" class="large-btn bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-extrabold rounded-2xl shadow-xl border-b-4 border-emerald-700 active:border-b-0 flex items-center justify-center gap-2 px-8 py-4 transition-all">
+            <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+            시작
+        </button>
+
+        <!-- 다시 하기 버튼 -->
+        <button id="reset-btn" onclick="handleReset()" class="large-btn bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white font-extrabold rounded-2xl shadow-xl border-b-4 border-rose-700 active:border-b-0 flex items-center justify-center gap-2 px-8 py-4 transition-all">
+            <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path></svg>
+            다시 하기
+        </button>
+    </footer>
+
+    <!-- 자바스크립트 (배치 확인 및 동작 안내) -->
+    <script>
+        // 배치 확인용 상태 (요청대로 첫 단계 1:00, 꽉 찬 막대로 멈춤 유지)
+        const errorMessageEl = document.getElementById('error-message');
+
+        function showError(message) {
+            errorMessageEl.textContent = message;
+        }
+
+        function clearError() {
+            errorMessageEl.textContent = '';
+        }
+
+        function handleStart() {
+            clearError();
+            // 배치 확인용 화면이므로 동작 제어 안내 한 줄 표시
+            showError('현재는 화면 배치 확인 모드입니다. 첫 단계가 1:00으로 설정되어 있습니다.');
+        }
+
+        function handleReset() {
+            clearError();
+            showError('초기 화면 상태입니다 (단계 1 선택, 남은 시간 1:00).');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>중2 사회 모둠 활동</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 기본 폰트 크기 및 가독성 설정 */
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      font-size: 32px;
+      line-height: 1.3;
+      background-color: #f8fafc;
+      color: #0f172a;
+      overflow: hidden; /* 스크롤 없이 한 화면 고정 */
+    }
+
+    /* 32px 최소 글자 크기 보장 */
+    .text-base-32 {
+      font-size: 32px;
+    }
+    .text-title-40 {
+      font-size: 40px;
+      font-weight: 800;
+    }
+
+    /* 가로세로 2cm 이상 (약 76px 이상) 터치/클릭 영역 보장 버튼 */
+    .btn-large {
+      min-width: 140px;
+      min-height: 76px;
+      font-size: 32px;
+      font-weight: 700;
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      padding: 0 24px;
+      touch-action: manipulation;
+    }
+
+    /* 입력 상자 스타일 (2cm 최소 높이 지원) */
+    .input-large {
+      min-height: 76px;
+      font-size: 32px;
+      font-weight: 700;
+      width: 120px;
+      text-align: center;
+      border: 3px solid #cbd5e1;
+      border-radius: 16px;
+      padding: 0 12px;
+    }
+
+    .input-large:focus {
+      outline: none;
+      border-color: #2563eb;
+      background-color: #eff6ff;
+    }
+
+    /* 경고 메시지 스타일 */
+    #error-message {
+      font-size: 28px;
+      font-weight: 700;
+      color: #dc2626;
+    }
+  </style>
+</head>
+<body class="h-screen w-screen p-4 flex flex-col justify-between">
+
+  <!-- [위] 오늘의 목표 (한 문장, 크게) -->
+  <header class="bg-blue-900 text-white p-4 rounded-2xl shadow-md text-center shrink-0">
+    <div class="text-title-40 leading-snug">
+      🎯 목표: 근거를 들어 모둠의 의견을 정리할 수 있다
+    </div>
+  </header>
+
+  <!-- [그 아래] 입력 영역 및 오류 안내 메시지 -->
+  <section class="bg-white p-4 rounded-2xl border-2 border-slate-300 shadow-sm shrink-0 my-2 flex flex-col gap-2">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-6 flex-wrap">
+        <div class="flex items-center gap-3">
+          <label for="student-count" class="font-bold whitespace-nowrap">학생 수</label>
+          <input type="number" id="student-count" class="input-large" value="26" min="1" max="100">
+        </div>
+        <div class="flex items-center gap-3">
+          <label for="group-size" class="font-bold whitespace-nowrap">모둠 인원</label>
+          <input type="number" id="group-size" class="input-large" value="4" min="1" max="20">
+        </div>
+        <div class="flex items-center gap-3">
+          <label for="absent-numbers" class="font-bold whitespace-nowrap">빠진 번호</label>
+          <input type="text" id="absent-numbers" class="input-large !w-64 text-left px-3" placeholder="예: 7, 15">
+        </div>
+      </div>
+      <div>
+        <button id="btn-divide" class="btn-large bg-blue-600 hover:bg-blue-700 text-white active:scale-95 shadow-lg" onclick="divideGroups()">
+          모둠 나누기
+        </button>
+      </div>
+    </div>
+    <!-- 입력 오류 시 한 줄로 메시지 출력 -->
+    <div id="error-message" class="hidden text-center bg-red-50 border border-red-200 rounded-lg p-1"></div>
+  </section>
+
+  <!-- [가운데] 메인 콘텐츠 영역 (왼쪽: 모둠 카드 자리 / 오른쪽: 역할 설명 상자) -->
+  <main class="flex-1 grid grid-cols-12 gap-4 min-h-0 overflow-hidden">
+    
+    <!-- [가운데 왼쪽] 모둠 카드가 들어갈 자리 (7/12 비율) -->
+    <section class="col-span-7 bg-slate-100 p-4 rounded-2xl border-2 border-slate-300 flex flex-col justify-between overflow-hidden">
+      
+      <!-- 오늘 참가 인원 안내 표시 (모둠 카드 위 한 줄) -->
+      <div id="summary-info" class="font-bold text-slate-800 pb-2 mb-2 border-b-2 border-slate-300 text-center shrink-0 text-base-32">
+        오늘 26명으로 나눴어요
+      </div>
+
+      <!-- 모둠 카드 영역 (한 줄에 4장씩 격자 배치) -->
+      <div id="group-cards-container" class="grid grid-cols-4 gap-3 overflow-y-auto pr-1">
+        <!-- 기본 예시 카드: 1모둠 하나만 표시 -->
+        <div class="bg-white border-4 border-blue-500 rounded-xl p-3 shadow-sm flex flex-col text-center">
+          <div class="font-black text-blue-700 border-b-2 border-slate-200 pb-1 mb-2 text-base-32">
+            1모둠
+          </div>
+          <div class="flex flex-col gap-1 font-bold text-slate-700 text-base-32 text-left px-2">
+            <span>1번 기록</span>
+            <span>2번 발표</span>
+            <span>3번 자료 찾기</span>
+            <span>4번 시간 지킴이</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 카드들 맨 아래에 위치한 다시 하기 버튼 -->
+      <div class="pt-3 border-t-2 border-slate-300 flex justify-center shrink-0">
+        <button id="btn-reset" class="btn-large bg-slate-600 hover:bg-slate-700 text-white active:scale-95 shadow-md" onclick="resetPlacement()">
+          다시 하기
+        </button>
+      </div>
+    </section>
+
+    <!-- [가운데 오른쪽] 역할 설명 상자 (5/12 비율) -->
+    <section class="col-span-5 bg-amber-50 p-4 rounded-2xl border-2 border-amber-300 shadow-sm flex flex-col overflow-y-auto justify-start">
+      <h2 class="font-black text-amber-900 border-b-4 border-amber-400 pb-2 mb-3 text-title-40">
+        📋 역할과 할 일
+      </h2>
+      <ul class="flex flex-col gap-3 font-semibold">
+        <li class="bg-white p-3 rounded-xl border border-amber-200 shadow-sm flex flex-col">
+          <span class="font-black text-blue-800">✍️ 기록</span>
+          <span class="text-slate-800">모둠이 나눈 생각을 활동지에 적어요</span>
+        </li>
+        <li class="bg-white p-3 rounded-xl border border-amber-200 shadow-sm flex flex-col">
+          <span class="font-black text-green-800">📢 발표</span>
+          <span class="text-slate-800">모둠 의견을 반 전체에 1분 안에 말해요</span>
+        </li>
+        <li class="bg-white p-3 rounded-xl border border-amber-200 shadow-sm flex flex-col">
+          <span class="font-black text-purple-800">🔍 자료 찾기</span>
+          <span class="text-slate-800">교과서와 자료에서 근거를 찾아 와요</span>
+        </li>
+        <li class="bg-white p-3 rounded-xl border border-amber-200 shadow-sm flex flex-col">
+          <span class="font-black text-red-800">⏱️ 시간 지킴이</span>
+          <span class="text-slate-800">남은 시간을 알리고, 모두가 한 번씩 말하게 챙겨요</span>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <script>
+    // 오류 메시지 출력 함수 (요청사항: 틀리면 왜 틀렸는지 한 줄로 알려 줌)
+    function showError(message) {
+      const errorDiv = document.getElementById('error-message');
+      if (message) {
+        errorDiv.textContent = message;
+        errorDiv.classList.remove('hidden');
+      } else {
+        errorDiv.textContent = '';
+        errorDiv.classList.add('hidden');
+      }
+    }
+
+    // 피셔-예이츠(Fisher-Yates) 셔플 함수 (중복 없이 골고루 섞기)
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    // 모둠원 수에 따른 역할 무작위 배정 함수
+    function assignRoles(memberCount) {
+      if (memberCount === 3) {
+        // 3명 모둠: 기록, 발표, 자료 찾기. (기록이 시간 지킴이도 함께 맡음)
+        const baseRoles = ['기록 + 시간 지킴이', '발표', '자료 찾기'];
+        return shuffle(baseRoles);
+      } else if (memberCount === 4) {
+        // 4명 모둠: 기록, 발표, 자료 찾기, 시간 지킴이
+        const baseRoles = ['기록', '발표', '자료 찾기', '시간 지킴이'];
+        return shuffle(baseRoles);
+      } else if (memberCount === 5) {
+        // 5명 모둠: 4명 모둠과 같고, 다섯째 사람은 자료 찾기
+        const baseRoles = ['기록', '발표', '자료 찾기', '시간 지킴이', '자료 찾기'];
+        return shuffle(baseRoles);
+      } else {
+        // 기타 인원의 경우 기본 4개 역할을 순환하며 할당
+        const defaultPool = ['기록', '발표', '자료 찾기', '시간 지킴이'];
+        let roles = [];
+        for (let i = 0; i < memberCount; i++) {
+          roles.push(defaultPool[i % defaultPool.length]);
+        }
+        return shuffle(roles);
+      }
+    }
+
+    // 모둠 분할 처리 핵심 함수
+    function processGroupDivision() {
+      showError('');
+
+      const studentCountInput = document.getElementById('student-count');
+      const groupSizeInput = document.getElementById('group-size');
+      const absentNumbersInput = document.getElementById('absent-numbers');
+
+      const studentCount = parseInt(studentCountInput.value, 10);
+      const groupSize = parseInt(groupSizeInput.value, 10);
+
+      // 입력값 유효성 검사 및 한 줄 오류 처리
+      if (isNaN(studentCount) || studentCount <= 0) {
+        showError('학생 수는 1명 이상이어야 합니다.');
+        return false;
+      }
+      if (isNaN(groupSize) || groupSize <= 0) {
+        showError('모둠 인원은 1명 이상이어야 합니다.');
+        return false;
+      }
+
+      // 빠진 번호 입력값 파싱 (쉼표, 공백 구분)
+      const absentRaw = absentNumbersInput.value.trim();
+      let absentList = [];
+      if (absentRaw.length > 0) {
+        // 쉼표나 공백으로 분리
+        const tokens = absentRaw.split(/[\s,]+/);
+        for (let token of tokens) {
+          if (!token) continue;
+          const num = Number(token);
+          if (isNaN(num) || !Number.isInteger(num)) {
+            showError('빠진 번호는 숫자만 입력해 주세요.');
+            return false;
+          }
+          if (num < 1 || num > studentCount) {
+            showError(`${num}번은 없는 번호예요. 학생 수 안의 번호만 넣어 주세요`);
+            return false;
+          }
+          absentList.push(num);
+        }
+      }
+
+      // 중복 제거
+      const absentSet = new Set(absentList);
+
+      // 빠진 번호를 제외한 전체 번호 목록 생성
+      let students = [];
+      for (let i = 1; i <= studentCount; i++) {
+        if (!absentSet.has(i)) {
+          students.push(i);
+        }
+      }
+
+      const activeStudentCount = students.length;
+
+      if (activeStudentCount === 0) {
+        showError('오늘 참석한 학생이 없습니다.');
+        return false;
+      }
+
+      if (groupSize > activeStudentCount) {
+        showError('모둠 인원이 참석한 학생 수보다 클 수 없습니다.');
+        return false;
+      }
+
+      // 피셔-예이츠 무작위 셔플
+      students = shuffle(students);
+
+      // 모둠 개수 및 나머지 계산
+      let numGroups = Math.floor(activeStudentCount / groupSize);
+      let remainder = activeStudentCount % groupSize;
+
+      if (numGroups === 0) {
+        numGroups = 1;
+        remainder = 0;
+      }
+
+      // 규칙 적용하여 학생 배정
+      let groups = [];
+      let currentIndex = 0;
+
+      if (remainder === 3) {
+        // 남는 사람이 3명이면 3명짜리 모둠을 하나 더 만들어 줌
+        for (let i = 0; i < numGroups; i++) {
+          groups.push(students.slice(currentIndex, currentIndex + groupSize));
+          currentIndex += groupSize;
+        }
+        groups.push(students.slice(currentIndex, currentIndex + 3));
+      } else {
+        for (let i = 0; i < numGroups; i++) {
+          groups.push(students.slice(currentIndex, currentIndex + groupSize));
+          currentIndex += groupSize;
+        }
+        if (remainder > 0) {
+          for (let r = 0; r < remainder; r++) {
+            groups[r % groups.length].push(students[currentIndex]);
+            currentIndex++;
+          }
+        }
+      }
+
+      // 모둠 카드 위 한 줄 안내 문구 업데이트
+      const summaryInfo = document.getElementById('summary-info');
+      summaryInfo.textContent = `오늘 ${activeStudentCount}명으로 나눴어요`;
+
+      // 화면에 출력 (카드 안 번호는 오름차순 정렬 & 역할 배정)
+      const container = document.getElementById('group-cards-container');
+      container.innerHTML = '';
+
+      groups.forEach((groupMembers, idx) => {
+        // 1. 번호 오름차순 정렬
+        groupMembers.sort((a, b) => a - b);
+
+        // 2. 모둠 인원수에 맞게 역할을 무작위 섞어 정함
+        const assignedRoles = assignRoles(groupMembers.length);
+
+        // 3. 번호와 역할을 짝지어 표기 (예: 3번 기록)
+        const membersHTML = groupMembers.map((num, mIdx) => {
+          return `<span>${num}번 ${assignedRoles[mIdx]}</span>`;
+        }).join('');
+
+        const groupCard = document.createElement('div');
+        groupCard.className = "bg-white border-4 border-blue-500 rounded-xl p-3 shadow-sm flex flex-col text-center";
+
+        groupCard.innerHTML = `
+          <div class="font-black text-blue-700 border-b-2 border-slate-200 pb-1 mb-2 text-base-32">
+            ${idx + 1}모둠
+          </div>
+          <div class="flex flex-col gap-1 font-bold text-slate-700 text-base-32 text-left px-2">
+            ${membersHTML}
+          </div>
+        `;
+        container.appendChild(groupCard);
+      });
+
+      return true;
+    }
+
+    // 연타 방지 래퍼 함수 (버튼을 여러 번 눌러도 한 번만 작동)
+    function executeWithDebounce(btnId, actionFn) {
+      const btn = document.getElementById(btnId);
+      if (btn.disabled) return;
+      
+      btn.disabled = true;
+      const success = actionFn();
+
+      // 작업 수행 후 500ms 동안 중복 클릭 금지
+      setTimeout(() => {
+        btn.disabled = false;
+      }, 500);
+    }
+
+    // 모둠 나누기 버튼 실행
+    function divideGroups() {
+      executeWithDebounce('btn-divide', processGroupDivision);
+    }
+
+    // 다시 하기 버튼 실행 (번호를 처음부터 다시 섞어서 나눠 줌)
+    function resetPlacement() {
+      executeWithDebounce('btn-reset', processGroupDivision);
+    }
+  </script>
+</body>
+</html>

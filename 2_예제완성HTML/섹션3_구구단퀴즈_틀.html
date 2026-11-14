@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>구구단 퀴즈</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 초등학교 교실 TV 화면에 최적화된 큰 폰트 및 스타일 정의 */
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #F8FAFC;
+            color: #0F172A;
+            user-select: none;
+        }
+
+        /* 32px 이상 글자 크기 보장 및 시독성 강화 */
+        .text-target {
+            font-size: clamp(32px, 3.5vw, 44px);
+            line-height: 1.3;
+        }
+
+        .text-question {
+            font-size: clamp(48px, 6vw, 72px);
+            font-weight: 800;
+        }
+
+        .text-option {
+            font-size: clamp(36px, 4.5vw, 56px);
+            font-weight: 700;
+        }
+
+        .text-feedback {
+            font-size: clamp(32px, 3.5vw, 42px);
+            font-weight: 700;
+        }
+
+        .text-reason {
+            font-size: clamp(28px, 3vw, 36px);
+            line-height: 1.4;
+        }
+
+        .text-btn {
+            font-size: clamp(32px, 3.5vw, 44px);
+            font-weight: 700;
+        }
+
+        /* 클릭 애니메이션 및 대형 그림자 효과 */
+        .btn-option {
+            transition: all 0.15s ease-in-out;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-option:hover:not(:disabled) {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-option:active:not(:disabled) {
+            transform: translateY(2px);
+        }
+
+        /* 색깔 외에 명확한 아이콘 및 패턴으로 고대비 구분 */
+        .status-correct {
+            border: 6px solid #16A34A;
+            background-color: #DCFCE7;
+            color: #15803D;
+        }
+
+        .status-wrong {
+            border: 6px solid #DC2626;
+            background-color: #FEE2E2;
+            color: #B91C1C;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-6 md:p-10 max-w-7xl mx-auto">
+
+    <!-- [상단] 오늘의 목표 및 진행 상황 -->
+    <header class="w-full bg-white rounded-3xl p-6 md:p-8 shadow-sm border-2 border-slate-200">
+        <h1 class="sr-only">구구단 퀴즈</h1>
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+            <!-- 오늘의 목표 -->
+            <div class="flex items-center gap-3">
+                <span class="bg-blue-600 text-white font-bold px-4 py-2 rounded-xl text-2xl shrink-0" aria-hidden="true">목표</span>
+                <p class="text-target font-extrabold text-blue-900">
+                    목표: 구구단을 바르게 계산할 수 있어요
+                </p>
+            </div>
+            <!-- 진행도 표시 (1/5) -->
+            <div class="bg-slate-100 border-2 border-slate-300 px-6 py-2 rounded-2xl shrink-0">
+                <span id="progress-text" class="text-target font-black text-slate-700">1 / 5</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- [중앙] 퀴즈 풀이 영역 (문제 + 보기 3개) -->
+    <main id="quiz-screen" class="my-auto py-8 flex flex-col items-center justify-center w-full">
+        <!-- 문제 상자 -->
+        <div class="bg-white w-full rounded-3xl p-8 md:p-12 mb-8 text-center border-4 border-blue-200 shadow-md">
+            <div id="question-text" class="text-question text-slate-800 tracking-wider">
+                7 × 6 = ?
+            </div>
+        </div>
+
+        <!-- 보기 버튼 3개 -->
+        <div id="options-container" class="grid grid-cols-3 gap-6 w-full">
+            <!-- JS에서 dynamic 랜더링 -->
+        </div>
+    </main>
+
+    <!-- [결과 화면] (5문제 완료 후 표시) -->
+    <main id="result-screen" class="hidden my-auto py-12 flex flex-col items-center justify-center w-full text-center">
+        <div class="bg-white w-full rounded-3xl p-12 border-4 border-indigo-200 shadow-lg flex flex-col items-center gap-8">
+            <div id="final-message" class="text-question text-slate-800 font-black">
+                다섯 문제 중 5문제를 맞혔어요
+            </div>
+            <div id="evaluation-message" class="text-feedback text-blue-600">
+                <!-- 평가 문구 추가 -->
+            </div>
+            <button id="restart-btn" onclick="restartQuiz()" class="btn-option mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-12 py-6 rounded-2xl text-btn border-4 border-indigo-800 font-black">
+                다시 하기
+            </button>
+        </div>
+    </main>
+
+    <!-- [하단] 결과 및 다음 문제 버튼 영역 -->
+    <footer id="feedback-area" class="w-full bg-white rounded-3xl p-6 md:p-8 border-2 border-slate-200 shadow-sm min-h-[160px] flex flex-col md:flex-row items-center justify-between gap-6">
+        <!-- 판정 결과 및 틀린 이유 -->
+        <div class="flex-1 flex flex-col justify-center">
+            <div id="feedback-title" class="text-feedback text-slate-400">
+                보기를 선택해 주세요.
+            </div>
+            <div id="feedback-reason" class="text-reason text-slate-600 mt-2 hidden">
+                <!-- 틀렸을 때 이유 한 줄 -->
+            </div>
+        </div>
+
+        <!-- 다음 문제 버튼 -->
+        <button id="next-btn" onclick="nextQuestion()" disabled class="btn-option shrink-0 bg-slate-300 text-slate-500 px-10 py-5 rounded-2xl text-btn font-black border-4 border-slate-400 cursor-not-allowed">
+            다음 문제
+        </button>
+    </footer>
+
+    <script>
+        // 표에 명시된 5개 문제 데이터 정의
+        const quizData = [
+            {
+                question: "7 × 6 = ?",
+                options: ["36", "42", "48"],
+                answer: "42",
+                reason: "7×6은 7을 여섯 번 더한 거예요. 7, 14, 21, 28, 35, 42"
+            },
+            {
+                question: "8 × 4 = ?",
+                options: ["24", "36", "32"],
+                answer: "32",
+                reason: "8×4는 8을 네 번 더한 거예요. 8, 16, 24, 32"
+            },
+            {
+                question: "6 × 9 = ?",
+                options: ["54", "56", "45"],
+                answer: "54",
+                reason: "6×9는 6을 아홉 번 더한 거예요. 6, 12, 18, 24, 30, 36, 42, 48, 54"
+            },
+            {
+                question: "3 × 7 = ?",
+                options: ["18", "21", "24"],
+                answer: "21",
+                reason: "3×7은 3을 일곱 번 더한 거예요. 3, 6, 9, 12, 15, 18, 21"
+            },
+            {
+                question: "9 × 5 = ?",
+                options: ["40", "54", "45"],
+                answer: "45",
+                reason: "9×5는 9를 다섯 번 더한 거예요. 9, 18, 27, 36, 45"
+            }
+        ];
+
+        let currentIndex = 0;
+        let correctCount = 0;
+        let isAnswered = false; // 중복 클릭 방지 플래그
+
+        // 초기화
+        function initQuiz() {
+            currentIndex = 0;
+            correctCount = 0;
+            isAnswered = false;
+
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('feedback-area').classList.remove('hidden');
+
+            loadQuestion();
+        }
+
+        // 문제 로드
+        function loadQuestion() {
+            isAnswered = false;
+            const currentQuiz = quizData[currentIndex];
+
+            // 상단 진행도 업데이트
+            document.getElementById('progress-text').innerText = `${currentIndex + 1} / ${quizData.length}`;
+
+            // 문제 텍스트
+            document.getElementById('question-text').innerText = currentQuiz.question;
+
+            // 보기 버튼 생성
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            currentQuiz.options.forEach((opt) => {
+                const button = document.createElement('button');
+                button.className = 'btn-option bg-white hover:bg-blue-50 text-slate-800 border-4 border-slate-300 py-8 md:py-10 rounded-3xl text-option w-full font-extrabold focus:outline-none';
+                button.innerText = opt;
+                button.onclick = () => checkAnswer(opt, button);
+                optionsContainer.appendChild(button);
+            });
+
+            // 하단 피드백 영역 초기화
+            const feedbackTitle = document.getElementById('feedback-title');
+            feedbackTitle.className = 'text-feedback text-slate-400';
+            feedbackTitle.innerText = '보기를 선택해 주세요.';
+
+            const feedbackReason = document.getElementById('feedback-reason');
+            feedbackReason.innerText = '';
+            feedbackReason.classList.add('hidden');
+
+            // 다음 문제 버튼 비활성화
+            disableNextButton();
+        }
+
+        // 보기 선택 처리
+        function checkAnswer(selectedOpt, selectedBtn) {
+            // 이미 답변한 경우 중복 클릭 방지
+            if (isAnswered) return;
+            isAnswered = true;
+
+            const currentQuiz = quizData[currentIndex];
+            const allOptionBtns = document.getElementById('options-container').children;
+
+            // 모든 보기 버튼 비활성화 (여러 번 누르는 것 방지)
+            for (let btn of allOptionBtns) {
+                btn.disabled = true;
+                btn.classList.add('cursor-default');
+            }
+
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackReason = document.getElementById('feedback-reason');
+
+            if (selectedOpt === currentQuiz.answer) {
+                // [맞았을 때]
+                correctCount++;
+                selectedBtn.classList.remove('bg-white', 'border-slate-300');
+                selectedBtn.classList.add('bg-green-500', 'text-white', 'border-green-700');
+
+                feedbackTitle.className = 'text-feedback text-green-600 font-extrabold flex items-center gap-2';
+                feedbackTitle.innerHTML = '<span>⭕ 맞았어요</span>';
+                feedbackReason.classList.add('hidden');
+            } else {
+                // [틀렸을 때]
+                selectedBtn.classList.remove('bg-white', 'border-slate-300');
+                selectedBtn.classList.add('bg-red-500', 'text-white', 'border-red-700');
+
+                // 정답인 버튼을 시각적으로 표시 (색과 텍스트 함께)
+                for (let btn of allOptionBtns) {
+                    if (btn.innerText === currentQuiz.answer) {
+                        btn.classList.remove('bg-white', 'border-slate-300');
+                        btn.classList.add('bg-green-100', 'border-green-600', 'text-green-800');
+                        btn.innerHTML = `${currentQuiz.answer} <span class="text-2xl font-bold">(정답)</span>`;
+                    }
+                }
+
+                feedbackTitle.className = 'text-feedback text-red-600 font-extrabold flex items-center gap-2';
+                feedbackTitle.innerHTML = '<span>❌ 다시 볼까요?</span>';
+
+                // 틀렸을 때 이유 보여주기
+                feedbackReason.innerText = currentQuiz.reason;
+                feedbackReason.classList.remove('hidden');
+            }
+
+            // 다음 문제 버튼 활성화
+            enableNextButton();
+        }
+
+        // 다음 문제 버튼 활성화
+        function enableNextButton() {
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.disabled = false;
+            nextBtn.classList.remove('bg-slate-300', 'text-slate-500', 'border-slate-400', 'cursor-not-allowed');
+            nextBtn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'text-white', 'border-blue-800', 'cursor-pointer');
+        }
+
+        // 다음 문제 버튼 비활성화
+        function disableNextButton() {
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.disabled = true;
+            nextBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'text-white', 'border-blue-800', 'cursor-pointer');
+            nextBtn.classList.add('bg-slate-300', 'text-slate-500', 'border-slate-400', 'cursor-not-allowed');
+        }
+
+        // 다음 문제 이동
+        function nextQuestion() {
+            if (!isAnswered) return;
+
+            currentIndex++;
+            if (currentIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        // 끝 화면 보여주기
+        function showResult() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('feedback-area').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            // 문구 설정: 다섯 문제 중 ○문제를 맞혔어요
+            document.getElementById('final-message').innerText = `다섯 문제 중 ${correctCount}문제를 맞혔어요`;
+
+            // 4개 이상 맞히면 이해한 것으로 간주
+            const evalMsg = document.getElementById('evaluation-message');
+            if (correctCount >= 4) {
+                evalMsg.innerText = "🎉 축하해요! 구구단을 아주 잘 이해하고 있어요!";
+                evalMsg.className = "text-feedback text-green-600 font-bold";
+            } else {
+                evalMsg.innerText = "💪 조금만 더 연습하면 잘할 수 있어요!";
+                evalMsg.className = "text-feedback text-amber-600 font-bold";
+            }
+        }
+
+        // 다시 하기
+        function restartQuiz() {
+            initQuiz();
+        }
+
+        // 페이지 로드 시 초기화 실행
+        window.onload = initQuiz;
+    </script>
+</body>
+</html>

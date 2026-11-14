@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>힘의 종류 확인 문제</title>
+    <!-- Tailwind CSS 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 기본 폰트 설정 및 모바일 접근성을 위한 기본 가독성 강화 */
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            word-break: keep-all;
+        }
+        /* 요구사항: 글자는 32px 이상 */
+        .text-huge {
+            font-size: 2rem; /* 32px */
+            line-height: 1.35;
+        }
+        .text-target {
+            font-size: 2.25rem; /* 36px */
+            line-height: 1.3;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-900 flex flex-col justify-between p-4 md:p-8">
+
+    <!-- 메인 컨테이너 -->
+    <div class="max-w-4xl mx-auto w-full bg-white rounded-3xl shadow-lg border-2 border-slate-200 p-6 md:p-10 flex flex-col justify-between min-h-[90vh]">
+        
+        <!-- [위] 오늘의 목표 및 진행 상황 -->
+        <header class="border-b-4 border-slate-200 pb-6 mb-6">
+            <h1 class="text-huge font-bold text-slate-700 mb-2">힘의 종류 확인 문제</h1>
+            <!-- 맨 위에 오늘의 목표를 한 문장으로 크게 보여 줌 -->
+            <div class="bg-blue-50 border-2 border-blue-300 rounded-2xl p-4 mb-4">
+                <p class="text-target font-extrabold text-blue-900">
+                    <span class="inline-block bg-blue-600 text-white text-huge px-3 py-1 rounded-xl mr-2 mb-1">목표</span>
+                    상황에 맞는 힘의 종류를 고를 수 있다
+                </p>
+            </div>
+            
+            <!-- 진행 상태 (예: 1/4) -->
+            <div id="progress-container" class="flex justify-between items-center mt-4">
+                <span id="question-progress" class="text-huge font-bold text-slate-600">진행: 1/4</span>
+                <span id="score-live" class="text-huge font-bold text-indigo-600">맞힌 개수: 0개</span>
+            </div>
+        </header>
+
+        <!-- [가운데] 문제 화면 (문제 영역 & 결과 화면 공유) -->
+        <main class="flex-grow flex flex-col justify-center my-4">
+            
+            <!-- 문제 풀이 영역 -->
+            <div id="quiz-screen" class="space-y-8">
+                <!-- 문제 문장 -->
+                <div class="bg-slate-50 border-2 border-slate-300 rounded-2xl p-6 shadow-inner">
+                    <p id="question-text" class="text-huge font-extrabold text-slate-800 leading-snug">
+                        <!-- 문제 내용이 JS로 삽입됩니다 -->
+                    </p>
+                </div>
+
+                <!-- 보기 버튼 3개 -->
+                <div id="options-container" class="grid grid-cols-1 gap-4">
+                    <!-- 보기 버튼들이 JS로 생성됩니다 -->
+                </div>
+            </div>
+
+            <!-- 최종 결과 화면 (초기에는 숨김) -->
+            <div id="result-screen" class="hidden text-center space-y-8 py-8">
+                <div class="bg-indigo-50 border-4 border-indigo-200 rounded-3xl p-8">
+                    <h2 class="text-target font-black text-indigo-950 mb-4" id="final-status-title">확인 결과</h2>
+                    <p id="final-score-text" class="text-target font-extrabold text-slate-800">
+                        네 문제 중 ○문제를 맞혔습니다
+                    </p>
+                    <p id="pass-fail-text" class="text-huge font-bold mt-4">
+                        <!-- 통과/재도전 메시지 -->
+                    </p>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- [아래] 결과 피드백 한 줄 및 다음/다시풀기 버튼 -->
+        <footer class="border-t-4 border-slate-200 pt-6 mt-6">
+            
+            <!-- 하단 피드백 영역 (정답/오답 결과 한 줄) -->
+            <div id="feedback-container" class="min-h-[100px] mb-6 flex flex-col justify-center rounded-2xl p-4 transition-all duration-200 bg-slate-50 border-2 border-dashed border-slate-300">
+                <p id="feedback-main" class="text-huge font-extrabold text-center text-slate-400">
+                    보기를 선택해 주세요.
+                </p>
+                <p id="feedback-sub" class="text-huge font-bold text-center text-slate-700 mt-2 hidden">
+                    <!-- 틀렸을 때 이유 한 줄 -->
+                </p>
+            </div>
+
+            <!-- 컨트롤 버튼 영역 -->
+            <div class="flex justify-end">
+                <!-- 다음 문제 버튼 -->
+                <button id="next-btn" onclick="nextQuestion()" class="w-full sm:w-auto px-8 py-4 bg-slate-400 text-white text-huge font-extrabold rounded-2xl shadow-md cursor-not-allowed transition duration-150" disabled>
+                    다음 문제
+                </button>
+
+                <!-- 다시 풀기 버튼 (최종 화면에서만 등장) -->
+                <button id="restart-btn" onclick="restartQuiz()" class="hidden w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-huge font-extrabold rounded-2xl shadow-lg transition duration-150 active:scale-95">
+                    다시 풀기
+                </button>
+            </div>
+
+        </footer>
+
+    </div>
+
+    <!-- 스크립트 영역 -->
+    <script>
+        // 문제 데이터 정의 (제시된 표 기준)
+        const quizData = [
+            {
+                question: "책상 위 책을 살짝 밀어도 미끄러지지 않는 이유는?",
+                options: ["중력", "마찰력", "탄성력"],
+                answer: "마찰력",
+                reasons: {
+                    "중력": "중력은 물체를 아래로 당기는 힘이에요",
+                    "탄성력": "탄성력은 늘어나거나 눌린 물체가 원래대로 돌아가려는 힘이에요"
+                }
+            },
+            {
+                question: "손에서 놓은 사과가 땅으로 떨어지는 이유는?",
+                options: ["마찰력", "탄성력", "중력"],
+                answer: "중력",
+                reasons: {
+                    "마찰력": "마찰력은 닿아 있는 면에서 움직임을 방해하는 힘이에요",
+                    "탄성력": "탄성력은 늘어나거나 눌린 물체가 원래대로 돌아가려는 힘이에요"
+                }
+            },
+            {
+                question: "당겼다 놓은 고무줄이 원래 길이로 돌아가는 이유는?",
+                options: ["탄성력", "중력", "마찰력"],
+                answer: "탄성력",
+                reasons: {
+                    "중력": "중력은 물체를 아래로 당기는 힘이라 고무줄을 줄어들게 하지 않아요",
+                    "마찰력": "마찰력은 닿아 있는 면에서 움직임을 방해하는 힘이에요"
+                }
+            },
+            {
+                question: "굴러가던 공이 잔디밭에서 점점 느려지다 멈추는 이유는?",
+                options: ["중력", "탄성력", "마찰력"],
+                answer: "마찰력",
+                reasons: {
+                    "중력": "중력은 아래로 당기는 힘이라 앞으로 굴러가는 공을 멈추게 하는 힘이 아니에요",
+                    "탄성력": "탄성력은 늘어나거나 눌린 물체가 원래대로 돌아가려는 힘이에요"
+                }
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let isAnswered = false; // 중복 클릭 방지 플래그
+
+        // 페이지 로드 시 퀴즈 초기화
+        window.onload = function() {
+            loadQuestion();
+        };
+
+        // 문제 불러오기
+        function loadQuestion() {
+            isAnswered = false; // 답변 가능 상태로 변경
+
+            const currentQuiz = quizData[currentQuestionIndex];
+            
+            // 상단 진행 상태 업데이터
+            document.getElementById('question-progress').textContent = `진행: ${currentQuestionIndex + 1}/${quizData.length}`;
+            document.getElementById('score-live').textContent = `맞힌 개수: ${score}개`;
+
+            // 문제 텍스트 반영
+            document.getElementById('question-text').textContent = `${currentQuestionIndex + 1}. ${currentQuiz.question}`;
+
+            // 보기 버튼 생성
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            currentQuiz.options.forEach((optionText) => {
+                const button = document.createElement('button');
+                button.className = "option-btn w-full p-5 text-left text-huge font-bold text-slate-800 bg-slate-50 hover:bg-slate-200 border-4 border-slate-300 rounded-2xl transition duration-150 active:scale-[0.99] flex items-center justify-between";
+                
+                // 글자와 함께 아이콘 형태 전달
+                button.innerHTML = `
+                    <span>${optionText}</span>
+                    <span class="status-icon text-huge"></span>
+                `;
+                
+                // 클릭 이벤트 연결 (한 번만 작동하도록 조치)
+                button.onclick = function() {
+                    selectOption(button, optionText);
+                };
+
+                optionsContainer.appendChild(button);
+            });
+
+            // 하단 피드백 초기화
+            const feedbackContainer = document.getElementById('feedback-container');
+            feedbackContainer.className = "min-h-[100px] mb-6 flex flex-col justify-center rounded-2xl p-4 transition-all duration-200 bg-slate-50 border-2 border-dashed border-slate-300";
+            
+            const feedbackMain = document.getElementById('feedback-main');
+            feedbackMain.textContent = "보기를 선택해 주세요.";
+            feedbackMain.className = "text-huge font-extrabold text-center text-slate-400";
+
+            const feedbackSub = document.getElementById('feedback-sub');
+            feedbackSub.classList.add('hidden');
+            feedbackSub.textContent = "";
+
+            // '다음 문제' 버튼 비활성화
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.disabled = true;
+            nextBtn.className = "w-full sm:w-auto px-8 py-4 bg-slate-300 text-slate-500 text-huge font-extrabold rounded-2xl cursor-not-allowed";
+        }
+
+        // 보기 선택 시 동작
+        function selectOption(selectedButton, selectedOption) {
+            // 이미 답변을 선택한 경우 중복 실행 방지
+            if (isAnswered) return;
+            isAnswered = true;
+
+            const currentQuiz = quizData[currentQuestionIndex];
+            const allButtons = document.querySelectorAll('.option-btn');
+            
+            // 모든 버튼을 비활성화하여 추가 클릭 방지
+            allButtons.forEach(btn => {
+                btn.classList.remove('hover:bg-slate-200', 'active:scale-[0.99]');
+                btn.style.cursor = 'default';
+            });
+
+            const feedbackContainer = document.getElementById('feedback-container');
+            const feedbackMain = document.getElementById('feedback-main');
+            const feedbackSub = document.getElementById('feedback-sub');
+
+            // 정답 여부 판별
+            if (selectedOption === currentQuiz.answer) {
+                // [정답]
+                score++;
+                document.getElementById('score-live').textContent = `맞힌 개수: ${score}개`;
+
+                // 선택한 버튼 스타일 (색상 + 텍스트 표시)
+                selectedButton.className = "option-btn w-full p-5 text-left text-huge font-extrabold text-green-900 bg-green-100 border-4 border-green-600 rounded-2xl flex items-center justify-between";
+                selectedButton.querySelector('.status-icon').textContent = "◯ (정답)";
+
+                // 피드백 영역 처리
+                feedbackContainer.className = "min-h-[100px] mb-6 flex flex-col justify-center rounded-2xl p-4 bg-green-100 border-4 border-green-500";
+                feedbackMain.textContent = "정답입니다";
+                feedbackMain.className = "text-huge font-black text-center text-green-700";
+                feedbackSub.classList.add('hidden');
+
+            } else {
+                // [오답]
+                // 선택한 버튼 오답 처리
+                selectedButton.className = "option-btn w-full p-5 text-left text-huge font-extrabold text-red-900 bg-red-100 border-4 border-red-500 rounded-2xl flex items-center justify-between";
+                selectedButton.querySelector('.status-icon').textContent = "✕ (내가 고른 오답)";
+
+                // 실제 정답 버튼도 함께 시각적으로 안내 (학습 효과 강화)
+                allButtons.forEach(btn => {
+                    if (btn.querySelector('span').textContent.trim() === currentQuiz.answer) {
+                        btn.className = "option-btn w-full p-5 text-left text-huge font-bold text-green-900 bg-green-50 border-4 border-green-400 rounded-2xl flex items-center justify-between opacity-90";
+                        btn.querySelector('.status-icon').textContent = "◯ (바른 정답)";
+                    }
+                });
+
+                // 오답 이유 가져오기
+                const reasonText = currentQuiz.reasons[selectedOption] || "다시 한번 힘의 개념을 확인해 보세요.";
+
+                // 피드백 영역 처리
+                feedbackContainer.className = "min-h-[100px] mb-6 flex flex-col justify-center rounded-2xl p-4 bg-red-50 border-4 border-red-400";
+                
+                feedbackMain.textContent = "다시 생각해 봅시다";
+                feedbackMain.className = "text-huge font-black text-center text-red-600";
+
+                feedbackSub.textContent = reasonText;
+                feedbackSub.className = "text-huge font-bold text-center text-slate-800 mt-2";
+                feedbackSub.classList.remove('hidden');
+            }
+
+            // '다음 문제' 버튼 활성화
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.disabled = false;
+            nextBtn.className = "w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white text-huge font-extrabold rounded-2xl shadow-lg transition duration-150 active:scale-95 cursor-pointer";
+        }
+
+        // '다음 문제' 버튼 클릭 시
+        function nextQuestion() {
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showFinalResult();
+            }
+        }
+
+        // 최종 결과 화면 출력
+        function showFinalResult() {
+            // 화면 전환
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('progress-container').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            // 버튼 전환
+            document.getElementById('next-btn').classList.add('hidden');
+            const restartBtn = document.getElementById('restart-btn');
+            restartBtn.classList.remove('hidden');
+
+            // 결과 메시지 설정
+            const finalScoreText = document.getElementById('final-score-text');
+            finalScoreText.textContent = `네 문제 중 ${score}문제를 맞혔습니다`;
+
+            const passFailText = document.getElementById('pass-fail-text');
+            
+            // 4문제 중 3문제 이상 맞히면 이해한 것으로 판단
+            if (score >= 3) {
+                passFailText.textContent = "🎉 축하합니다! 힘의 종류를 잘 이해하고 있군요!";
+                passFailText.className = "text-huge font-extrabold mt-4 text-green-700";
+            } else {
+                passFailText.textContent = "💪 조금 더 연습이 필요해요. '다시 풀기'를 눌러 다시 도전해 보세요!";
+                passFailText.className = "text-huge font-extrabold mt-4 text-amber-700";
+            }
+
+            // 하단 피드백 영역 종합 안내로 변경
+            const feedbackContainer = document.getElementById('feedback-container');
+            feedbackContainer.className = "min-h-[100px] mb-6 flex flex-col justify-center rounded-2xl p-4 bg-slate-100 border-2 border-slate-300";
+            
+            const feedbackMain = document.getElementById('feedback-main');
+            feedbackMain.textContent = "풀이가 완료되었습니다.";
+            feedbackMain.className = "text-huge font-extrabold text-center text-slate-700";
+
+            const feedbackSub = document.getElementById('feedback-sub');
+            feedbackSub.classList.add('hidden');
+        }
+
+        // '다시 풀기' 구현
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+
+            // 화면 복원
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('progress-container').classList.remove('hidden');
+
+            // 버튼 복원
+            document.getElementById('restart-btn').classList.add('hidden');
+            document.getElementById('next-btn').classList.remove('hidden');
+
+            loadQuestion();
+        }
+    </script>
+</body>
+</html>

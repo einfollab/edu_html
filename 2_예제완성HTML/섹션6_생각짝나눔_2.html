@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>초등 3학년 과학 - 생각-짝-나눔 (1단계)</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 기본 폰트 설정 및 스크롤 방지 */
+        body {
+            font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+            overflow: hidden; /* 스크롤 없이 한 화면 고정 */
+        }
+        /* 버튼 최소 크기 (2cm = 약 76px 이상의 높이 확보) */
+        .min-btn-size {
+            min-height: 80px;
+            min-width: 180px;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white h-screen w-screen flex flex-col justify-between p-6 select-none">
+
+    <!-- 1. 위: 오늘의 목표 문장 + 오늘의 질문 -->
+    <header class="flex flex-col items-center justify-center text-center space-y-3 pt-2">
+        <!-- 오늘의 목표 (맨 위 한 문장으로 크게) -->
+        <div class="bg-indigo-900/80 border border-indigo-400/50 rounded-2xl px-8 py-4 w-full max-w-5xl shadow-lg">
+            <p class="text-3xl md:text-4xl font-extrabold text-indigo-200 tracking-tight">
+                🎯 목표: 자석이 쓰이는 곳을 찾아 짝에게 설명할 수 있어요
+            </p>
+        </div>
+        
+        <!-- 오늘의 질문 -->
+        <div class="bg-slate-800/80 border border-slate-700 rounded-2xl px-8 py-4 w-full max-w-5xl shadow-md">
+            <h1 class="text-3xl md:text-4xl font-bold text-yellow-300">
+                ❓ 질문: 우리 집과 교실에서 자석은 어디에 쓰일까요?
+            </h1>
+        </div>
+    </header>
+
+    <!-- 2. 가운데: 3단계 가로 배치 + 큰 숫자 + 가로 막대 -->
+    <main class="flex flex-col items-center justify-center flex-1 my-2">
+        
+        <!-- 단계 이름 3개 가로 배치 (1단계만 진하게) -->
+        <div class="grid grid-cols-3 gap-4 w-full max-w-5xl mb-6">
+            <!-- 단계 1 (활성: 진하고 크게) -->
+            <div class="bg-blue-600 text-white rounded-2xl p-4 text-center border-4 border-yellow-400 shadow-xl scale-105">
+                <span class="text-3xl font-black block">🤔 단계 1</span>
+                <span class="text-2xl font-bold opacity-90">혼자 생각 1분</span>
+            </div>
+            
+            <!-- 단계 2 (비활성: 연하게) -->
+            <div class="bg-slate-800 text-slate-400 rounded-2xl p-4 text-center border border-slate-700 opacity-60">
+                <span class="text-3xl font-bold block">🗣️ 단계 2</span>
+                <span class="text-2xl font-medium">짝과 이야기 2분</span>
+            </div>
+            
+            <!-- 단계 3 (비활성: 연하게) -->
+            <div class="bg-slate-800 text-slate-400 rounded-2xl p-4 text-center border border-slate-700 opacity-60">
+                <span class="text-3xl font-bold block">🙌 단계 3</span>
+                <span class="text-2xl font-medium">다 같이 나눔 1분</span>
+            </div>
+        </div>
+
+        <!-- 타이머 영역 (남은 시간 큰 숫자 + 가로 막대) -->
+        <div class="w-full max-w-5xl bg-slate-800/90 border border-slate-700 rounded-3xl p-6 flex flex-col items-center shadow-2xl">
+            <!-- 남은 시간 큰 숫자 -->
+            <div id="timer-display" class="text-8xl md:text-9xl font-black tracking-widest text-emerald-400 my-2 font-mono drop-shadow-md">
+                1:00
+            </div>
+
+            <!-- 가로 막대 (프로그레스 바) -->
+            <div class="w-full bg-slate-700 h-10 rounded-full overflow-hidden p-1 border border-slate-600">
+                <div id="progress-bar" class="bg-emerald-400 h-full rounded-full transition-all duration-300 ease-linear" style="width: 100%;"></div>
+            </div>
+
+            <!-- 틀렸을 때 한 줄 메시지 표시 영역 -->
+            <div id="error-message" class="h-8 mt-3 text-red-400 text-2xl font-bold text-center"></div>
+        </div>
+    </main>
+
+    <!-- 3. 아래: 시작 버튼, 다시 하기 버튼 (2cm 이상 크기) -->
+    <footer class="flex justify-center items-center gap-8 pb-4">
+        <!-- 시작 버튼 -->
+        <button id="start-btn" onclick="handleStart()" class="min-btn-size bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-3xl font-extrabold rounded-2xl px-10 border-b-4 border-emerald-800 shadow-lg flex items-center justify-center gap-2 cursor-pointer transition">
+            ▶️ 시작
+        </button>
+
+        <!-- 다시 하기 버튼 -->
+        <button id="reset-btn" onclick="handleReset()" class="min-btn-size bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-white text-3xl font-extrabold rounded-2xl px-10 border-b-4 border-amber-800 shadow-lg flex items-center justify-center gap-2 cursor-pointer transition">
+            🔄 다시 하기
+        </button>
+    </footer>
+
+    <!-- 4. 자바스크립트 (카운트다운 타이머 동작) -->
+    <script>
+        const TOTAL_SECONDS = 60; // 1분
+        let remainingSeconds = TOTAL_SECONDS;
+        let timerInterval = null;
+        let isRunning = false;
+
+        const timerDisplayEl = document.getElementById('timer-display');
+        const progressBarEl = document.getElementById('progress-bar');
+        const errorMessageEl = document.getElementById('error-message');
+
+        function showError(msg) {
+            errorMessageEl.textContent = msg;
+        }
+
+        function clearError() {
+            errorMessageEl.textContent = '';
+        }
+
+        // 시간 및 막대 시각화 업데이트
+        function updateDisplay() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            const formattedTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            
+            timerDisplayEl.textContent = formattedTime;
+            
+            const percentage = (remainingSeconds / TOTAL_SECONDS) * 100;
+            progressBarEl.style.width = `${percentage}%`;
+        }
+
+        // 시작 버튼 작동
+        function handleStart() {
+            clearError();
+
+            if (remainingSeconds <= 0) {
+                showError('⚠️ 이미 시간이 다 끝났어요! [다시 하기] 버튼을 눌러주세요.');
+                return;
+            }
+
+            if (isRunning) {
+                showError('⚠️ 타이머가 이미 가고 있어요!');
+                return;
+            }
+
+            isRunning = true;
+
+            timerInterval = setInterval(() => {
+                remainingSeconds--;
+                updateDisplay();
+
+                if (remainingSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    isRunning = false;
+                }
+            }, 1000);
+        }
+
+        // 다시 하기 버튼 작동 (1:00 정지 상태로 돌아감)
+        function handleReset() {
+            clearError();
+
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            isRunning = false;
+            remainingSeconds = TOTAL_SECONDS;
+            updateDisplay();
+        }
+
+        // 처음 화면 로드 시 상태 적용
+        updateDisplay();
+    </script>
+</body>
+</html>

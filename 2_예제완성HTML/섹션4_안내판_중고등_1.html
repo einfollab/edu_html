@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3차시 · 힘의 종류</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 기본 폰트 및 최소 글자 크기 보장 (32px 이상 요구사항 반영) */
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            font-size: 32px;
+            line-height: 1.4;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        
+        /* 32px 이상 기준 적용 클래스들 */
+        .text-32 { font-size: 32px; }
+        .text-36 { font-size: 36px; }
+        .text-40 { font-size: 40px; }
+        .text-48 { font-size: 48px; }
+
+        /* 커스텀 체크박스 스타일링 */
+        .custom-checkbox {
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            border: 4px solid #94a3b8;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #ffffff;
+        }
+
+        .custom-checkbox.checked {
+            background-color: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .custom-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .custom-checkbox.error {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-6 max-w-6xl mx-auto justify-between selection:bg-blue-200">
+
+    <!-- [위] 차시 제목 및 오늘의 목표 -->
+    <header class="w-full space-y-4">
+        <!-- 차시 제목 -->
+        <div class="inline-block bg-slate-200 text-slate-800 font-bold px-6 py-2 rounded-2xl text-32">
+            3차시 · 힘의 종류
+        </div>
+        
+        <!-- 맨 위에 크게 보여주는 오늘의 목표 (한 문장) -->
+        <div class="bg-blue-600 text-white p-6 rounded-3xl shadow-md border-2 border-blue-700">
+            <div class="text-28 font-medium text-blue-100 mb-1">오늘의 목표</div>
+            <div class="text-40 font-extrabold leading-snug">
+                생활 속 힘을 중력·탄성력·마찰력으로 나누어 설명할 수 있다
+            </div>
+        </div>
+    </header>
+
+    <!-- [가운데] 오늘 할 일 목록 3개 -->
+    <main class="w-full my-6">
+        <section class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+            <h2 class="text-36 font-bold text-slate-900 mb-4 pb-2 border-b-2 border-slate-100">
+                오늘 할 일
+            </h2>
+            <ol class="space-y-4">
+                <li class="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-200 text-32">
+                    <div class="flex items-center gap-4">
+                        <span class="flex items-center justify-center w-12 h-12 rounded-xl bg-slate-200 font-bold text-slate-700">1</span>
+                        <span class="font-semibold text-slate-800">사진 속에서 힘 찾기</span>
+                    </div>
+                    <span class="bg-slate-200 text-slate-700 px-4 py-1 rounded-xl text-28 font-bold whitespace-nowrap">10분</span>
+                </li>
+                <li class="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-200 text-32">
+                    <div class="flex items-center gap-4">
+                        <span class="flex items-center justify-center w-12 h-12 rounded-xl bg-slate-200 font-bold text-slate-700">2</span>
+                        <span class="font-semibold text-slate-800">모둠별로 힘을 나누어 정리하기</span>
+                    </div>
+                    <span class="bg-slate-200 text-slate-700 px-4 py-1 rounded-xl text-28 font-bold whitespace-nowrap">20분</span>
+                </li>
+                <li class="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-200 text-32">
+                    <div class="flex items-center gap-4">
+                        <span class="flex items-center justify-center w-12 h-12 rounded-xl bg-slate-200 font-bold text-slate-700">3</span>
+                        <span class="font-semibold text-slate-800">내 말로 설명 쓰기</span>
+                    </div>
+                    <span class="bg-slate-200 text-slate-700 px-4 py-1 rounded-xl text-28 font-bold whitespace-nowrap">10분</span>
+                </li>
+            </ol>
+        </section>
+    </main>
+
+    <!-- [아래] 평가 기준 체크리스트 3개 -->
+    <footer class="w-full space-y-4">
+        <section class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b-2 border-slate-100">
+                <h2 class="text-36 font-bold text-slate-900">
+                    스스로 확인하기
+                </h2>
+                <!-- 순위표 대신 다시 하기 버튼 -->
+                <button 
+                    id="resetBtn"
+                    onclick="resetChecklist()"
+                    class="bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-28 font-bold px-6 py-2 rounded-2xl border border-slate-300 transition-colors"
+                >
+                    다시 하기
+                </button>
+            </div>
+
+            <!-- 피드백 메시지 영역 (오류/완료 시 1줄 표시) -->
+            <div id="feedbackMessage" class="hidden mb-4 p-4 rounded-2xl text-32 font-bold text-center border-2" role="alert"></div>
+
+            <ul class="space-y-4">
+                <!-- 체크 항목 1 -->
+                <li class="flex items-center gap-5 p-4 rounded-2xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-32" onclick="toggleCheck(0)">
+                    <div id="check-0" class="custom-checkbox"></div>
+                    <span class="font-medium text-slate-800">중력·탄성력·마찰력마다 생활 속 예를 하나씩 썼다</span>
+                </li>
+                <!-- 체크 항목 2 -->
+                <li class="flex items-center gap-5 p-4 rounded-2xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-32" onclick="toggleCheck(1)">
+                    <div id="check-1" class="custom-checkbox"></div>
+                    <span class="font-medium text-slate-800">근거를 두 개 이상 썼다</span>
+                </li>
+                <!-- 체크 항목 3 -->
+                <li class="flex items-center gap-5 p-4 rounded-2xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-32" onclick="toggleCheck(2)">
+                    <div id="check-2" class="custom-checkbox"></div>
+                    <span class="font-medium text-slate-800">친구의 설명을 듣고 고칠 점을 하나 찾았다</span>
+                </li>
+            </ul>
+        </section>
+    </footer>
+
+    <!-- 인터랙션 및 오류 안내 로직 -->
+    <script>
+        // 체크 상태 관리 (순서대로 체크했는지 확인하기 위한 상태값)
+        const checkStatus = [false, false, false];
+        
+        // 항목별 미체크 시 오류 이유 안내 문구 (한 줄 안내)
+        const errorReasons = [
+            "첫 번째 항목(힘마다 생활 속 예 쓰기)을 확인하지 않았습니다.",
+            "두 번째 항목(근거 2개 이상 쓰기)을 확인하지 않았습니다.",
+            "세 번째 항목(친구 설명에서 고칠 점 찾기)을 확인하지 않았습니다."
+        ];
+
+        function toggleCheck(index) {
+            const el = document.getElementById(`check-${index}`);
+            
+            // 순서에 상관없이 자유롭게 토글 가능
+            checkStatus[index] = !checkStatus[index];
+
+            if (checkStatus[index]) {
+                el.classList.add('checked');
+                el.classList.remove('error');
+            } else {
+                el.classList.remove('checked');
+            }
+
+            validateChecks();
+        }
+
+        // 체크 상태 검증 및 한 줄 피드백 제공
+        function validateChecks() {
+            const feedbackEl = document.getElementById('feedbackMessage');
+            feedbackEl.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'border-red-300', 'bg-green-50', 'text-green-700', 'border-green-300');
+
+            // 첫 번째로 누락된 항목 탐색
+            const missingIndex = checkStatus.findIndex(status => status === false);
+
+            if (missingIndex !== -1 && checkStatus.some(s => s === true)) {
+                // 하나라도 체크했지만 다 완료하지 않았을 때 왜 안 끝났는지 한 줄로 표시
+                feedbackEl.textContent = errorReasons[missingIndex];
+                feedbackEl.classList.add('bg-red-50', 'text-red-700', 'border-red-300');
+            } else if (missingIndex === -1) {
+                // 모두 완료했을 때
+                feedbackEl.textContent = "오늘의 배움 목표를 모두 달성했습니다!";
+                feedbackEl.classList.add('bg-green-50', 'text-green-700', 'border-green-300');
+            } else {
+                // 아무것도 체크 안 된 초기 상태
+                feedbackEl.classList.add('hidden');
+            }
+        }
+
+        // 다시 하기 기능
+        function resetChecklist() {
+            for (let i = 0; i < checkStatus.length; i++) {
+                checkStatus[i] = false;
+                const el = document.getElementById(`check-${i}`);
+                el.classList.remove('checked', 'error');
+            }
+            const feedbackEl = document.getElementById('feedbackMessage');
+            feedbackEl.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

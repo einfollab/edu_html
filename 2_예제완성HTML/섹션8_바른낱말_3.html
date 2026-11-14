@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>바르게 쓴 낱말 고르기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body {
+            font-family: 'Pretendard', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 h-screen w-screen overflow-hidden flex flex-col justify-between p-6 md:p-10 text-slate-900">
+
+    <!-- 상단: 오늘의 목표 및 제목 -->
+    <header class="w-full text-center bg-white rounded-3xl p-6 shadow-md border-2 border-slate-200">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-blue-600 mb-2">
+            바르게 쓴 낱말 고르기
+        </h1>
+        <p class="text-3xl md:text-5xl font-bold text-slate-800 tracking-tight leading-relaxed">
+            🎯 <span class="underline decoration-yellow-400 decoration-4 underline-offset-8">목표: 헷갈리는 낱말 가운데 바르게 쓴 것을 고를 수 있어요</span>
+        </p>
+    </header>
+
+    <!-- 가운데: 문제 번호 및 낱말 버튼 영역 -->
+    <main class="flex-1 flex flex-col justify-center items-center my-4">
+        <!-- 문제 진행 중일 때 표시할 카드 -->
+        <div id="quiz-card" class="w-full max-w-5xl flex flex-col items-center">
+            <!-- 문제 번호 표시 -->
+            <div class="mb-6 bg-blue-100 text-blue-800 text-3xl md:text-4xl font-black px-8 py-3 rounded-full border-2 border-blue-300">
+                문제 <span id="quiz-num">1</span> / 5
+            </div>
+
+            <!-- 낱말 선택 버튼 2개 -->
+            <div class="grid grid-cols-2 gap-8 w-full">
+                <button onclick="selectOption(0)" id="opt-btn-0" class="h-44 md:h-56 bg-white hover:bg-blue-50 active:scale-95 border-4 border-slate-300 hover:border-blue-500 rounded-3xl text-5xl md:text-7xl font-black shadow-lg transition-all duration-150 flex items-center justify-center text-slate-800">
+                    며칠
+                </button>
+                <button onclick="selectOption(1)" id="opt-btn-1" class="h-44 md:h-56 bg-white hover:bg-blue-50 active:scale-95 border-4 border-slate-300 hover:border-blue-500 rounded-3xl text-5xl md:text-7xl font-black shadow-lg transition-all duration-150 flex items-center justify-center text-slate-800">
+                    몇일
+                </button>
+            </div>
+        </div>
+
+        <!-- 다섯 문제 끝 화면 (초기에는 숨김) -->
+        <div id="end-card" class="hidden w-full max-w-5xl flex flex-col items-center justify-center bg-white rounded-3xl p-12 shadow-lg border-4 border-blue-300 text-center">
+            <h2 id="end-score-text" class="text-4xl md:text-6xl font-black text-slate-800 my-8">
+                다섯 문제 중 0문제를 맞혔어요
+            </h2>
+            <button onclick="restartQuiz()" class="text-3xl md:text-5xl font-black px-12 py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl shadow-xl transition-all active:scale-95 border-2 border-blue-700 cursor-pointer">
+                다시 하기
+            </button>
+        </div>
+    </main>
+
+    <!-- 하단: 이유 설명 한 줄 및 '다음 문제' 버튼 -->
+    <footer id="footer-bar" class="w-full bg-white rounded-3xl p-6 shadow-md border-2 border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
+        <!-- 이유 한 줄 자리 -->
+        <div id="explanation-box" class="flex-1 text-center md:text-left text-3xl md:text-4xl font-bold text-slate-700 min-h-[50px] flex items-center justify-center md:justify-start px-4">
+            👈 정답이라고 생각하는 낱말을 눌러 보세요!
+        </div>
+
+        <!-- 다음 문제 버튼 -->
+        <button id="next-btn" onclick="nextQuestion()" disabled class="w-full md:w-auto text-3xl md:text-4xl font-bold px-10 py-5 bg-slate-300 text-slate-500 rounded-2xl transition-all duration-150 whitespace-nowrap border-2 border-transparent">
+            다음 문제
+        </button>
+    </footer>
+
+    <script>
+        // 문제 데이터
+        const quizData = [
+            {
+                options: ["며칠", "몇일"],
+                answer: 0,
+                reason: "'몇일'이라고 쓰지 않고 '며칠'로 써요."
+            },
+            {
+                options: ["왠지", "웬지"],
+                answer: 0,
+                reason: "'왜인지'가 줄어든 말이라 '왠지'예요."
+            },
+            {
+                options: ["금세", "금새"],
+                answer: 0,
+                reason: "'금시에'가 줄어든 말이라 '금세'예요."
+            },
+            {
+                options: ["설거지", "설겆이"],
+                answer: 0,
+                reason: "'설겆이'가 아니라 '설거지'로 써요."
+            },
+            {
+                options: ["깨끗이", "깨끗히"],
+                answer: 0,
+                reason: "'ㅅ' 받침 뒤에는 '이'를 써서 '깨끗이'예요."
+            }
+        ];
+
+        let currentIdx = 0;
+        let score = 0;
+        let selectedOption = null;
+
+        const quizCard = document.getElementById("quiz-card");
+        const endCard = document.getElementById("end-card");
+        const footerBar = document.getElementById("footer-bar");
+        const quizNumEl = document.getElementById("quiz-num");
+        const btn0 = document.getElementById("opt-btn-0");
+        const btn1 = document.getElementById("opt-btn-1");
+        const explanationBox = document.getElementById("explanation-box");
+        const nextBtn = document.getElementById("next-btn");
+        const endScoreText = document.getElementById("end-score-text");
+
+        // 초기 화면 및 문제 로드
+        function loadQuestion() {
+            selectedOption = null;
+            
+            // 화면 요소 전환
+            quizCard.classList.remove("hidden");
+            endCard.classList.add("hidden");
+            footerBar.classList.remove("hidden");
+
+            const q = quizData[currentIdx];
+            quizNumEl.textContent = currentIdx + 1;
+            
+            btn0.textContent = q.options[0];
+            btn1.textContent = q.options[1];
+
+            // 버튼 스타일 초기화
+            [btn0, btn1].forEach(btn => {
+                btn.className = "h-44 md:h-56 bg-white hover:bg-blue-50 active:scale-95 border-4 border-slate-300 hover:border-blue-500 rounded-3xl text-5xl md:text-7xl font-black shadow-lg transition-all duration-150 flex items-center justify-center text-slate-800 cursor-pointer";
+                btn.disabled = false;
+            });
+
+            explanationBox.className = "flex-1 text-center md:text-left text-3xl md:text-4xl font-bold text-slate-700 min-h-[50px] flex items-center justify-center md:justify-start px-4";
+            explanationBox.textContent = "👈 정답이라고 생각하는 낱말을 눌러 보세요!";
+
+            // 다음 문제 버튼 비활성화
+            nextBtn.disabled = true;
+            nextBtn.className = "w-full md:w-auto text-3xl md:text-4xl font-bold px-10 py-5 bg-slate-300 text-slate-500 rounded-2xl transition-all duration-150 whitespace-nowrap border-2 border-transparent cursor-not-allowed";
+            nextBtn.textContent = currentIdx === quizData.length - 1 ? "결과 보기" : "다음 문제";
+        }
+
+        // 보기 선택 시 동작
+        function selectOption(idx) {
+            if (selectedOption !== null) return;
+            selectedOption = idx;
+
+            const q = quizData[currentIdx];
+            const isCorrect = (idx === q.answer);
+
+            if (isCorrect) {
+                score++;
+                explanationBox.innerHTML = `⭕ <span class="text-green-600 font-extrabold mr-2">맞았어요!</span> ${q.reason}`;
+            } else {
+                explanationBox.innerHTML = `❌ <span class="text-red-600 font-extrabold mr-2">다시 볼까요?</span> ${q.reason}`;
+            }
+
+            // 버튼 상태 변경
+            [btn0, btn1].forEach((btn, buttonIdx) => {
+                btn.disabled = true;
+                btn.classList.remove("hover:bg-blue-50", "active:scale-95", "hover:border-blue-500", "cursor-pointer");
+
+                if (buttonIdx === q.answer) {
+                    btn.className = "h-44 md:h-56 bg-green-100 border-8 border-green-500 text-green-900 rounded-3xl text-5xl md:text-7xl font-black shadow-lg flex items-center justify-center scale-105 cursor-default";
+                } else if (buttonIdx === idx) {
+                    btn.className = "h-44 md:h-56 bg-red-100 border-8 border-red-400 text-red-800 rounded-3xl text-5xl md:text-7xl font-black shadow-lg flex items-center justify-center opacity-75 cursor-default";
+                } else {
+                    btn.className = "h-44 md:h-56 bg-slate-100 border-4 border-slate-200 text-slate-400 rounded-3xl text-5xl md:text-7xl font-black flex items-center justify-center opacity-50 cursor-default";
+                }
+            });
+
+            // 다음 문제 버튼 활성화
+            nextBtn.disabled = false;
+            nextBtn.className = "w-full md:w-auto text-3xl md:text-4xl font-black px-10 py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-lg transition-all duration-150 whitespace-nowrap cursor-pointer active:scale-95";
+        }
+
+        // 다음 문제 버튼 동작
+        function nextQuestion() {
+            if (currentIdx < quizData.length - 1) {
+                currentIdx++;
+                loadQuestion();
+            } else {
+                showEndScreen();
+            }
+        }
+
+        // 끝 화면 표시 (요청한 문구 반영)
+        function showEndScreen() {
+            quizCard.classList.add("hidden");
+            footerBar.classList.add("hidden");
+            endCard.classList.remove("hidden");
+            endScoreText.textContent = `다섯 문제 중 ${score}문제를 맞혔어요`;
+        }
+
+        // 다시 하기 (초기화 후 1번 문제로)
+        function restartQuiz() {
+            currentIdx = 0;
+            score = 0;
+            loadQuestion();
+        }
+
+        // 시작 시 문제 로드
+        window.onload = function() {
+            loadQuestion();
+        };
+    </script>
+</body>
+</html>

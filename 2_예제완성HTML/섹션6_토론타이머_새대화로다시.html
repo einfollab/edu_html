@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>중학교 국어 토론 수업 타이머</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* 3가지 색상 테마 커스텀 정의 */
+        /* Navy: #1E293B / Dark Gray: #334155 / Light Gray & White: #F8FAFC, #FFFFFF */
+        
+        /* 버튼 클릭 시 튕김 및 중복 클릭 방지 스타일 */
+        .btn-touch {
+            touch-action: manipulation;
+            transition: all 0.15s ease-in-out;
+        }
+        
+        .btn-touch:active {
+            transform: scale(0.96);
+        }
+
+        /* 오버레이 메시지 애니메이션 */
+        .fade-in {
+            animation: fadeIn 0.25s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 h-screen w-screen overflow-hidden flex flex-col justify-between p-4 md:p-6">
+
+    <!-- 1. 맨 위: 오늘의 목표 & 토론 주제 (글자 크기 32px 이상 강조) -->
+    <header class="w-full bg-slate-800 border-2 border-slate-700 rounded-2xl p-4 md:p-6 shadow-lg text-center flex flex-col justify-center gap-2">
+        <div class="text-slate-300 font-bold text-xl md:text-2xl tracking-tight">
+            🎯 <span class="text-amber-400">오늘의 목표:</span> <span class="text-white text-2xl md:text-4xl font-extrabold leading-tight">상대 주장을 정확히 듣고 한 줄로 요약할 수 있다</span>
+        </div>
+        <div class="text-slate-400 font-medium text-lg md:text-xl border-t border-slate-700/80 pt-2 mt-1">
+            💬 <span class="text-slate-300">토론 주제:</span> <strong class="text-slate-100 font-bold">중학교에서 수업 시간에 휴대폰 사용을 허용해야 한다</strong>
+        </div>
+    </header>
+
+    <!-- 2. 가운데: 토론 단계 & 남은 시간 (화면에서 가장 크게 표시) -->
+    <main class="flex-1 my-3 bg-slate-800/80 border border-slate-700 rounded-3xl p-4 flex flex-col justify-center items-center relative shadow-2xl">
+        
+        <!-- 단계 표시 (32px 이상, 화면 중심 강조) -->
+        <div id="step-name" class="text-3xl sm:text-4xl md:text-6xl font-black text-sky-400 tracking-wider mb-2 text-center">
+            1. 찬성 주장
+        </div>
+        
+        <!-- 다음 단계 안내 -->
+        <div id="next-step-info" class="text-xl md:text-2xl font-bold text-slate-400 mb-4">
+            (다음: 반대 주장)
+        </div>
+
+        <!-- 남은 시간 타이머 카운트다운 (초대형 폰트) -->
+        <div id="timer-display" class="font-mono text-7xl sm:text-9xl md:text-[13rem] font-black tracking-tight text-white my-2 drop-shadow-md">
+            02:00
+        </div>
+
+        <!-- 5단계 진행 시 노출되는 한 줄 요약 안내 바 -->
+        <div id="summary-hint" class="hidden w-full max-w-3xl bg-amber-500/20 border-2 border-amber-500/50 rounded-xl p-3 text-center mt-2">
+            <p class="text-amber-300 text-xl md:text-2xl font-bold">
+                ✍️ 상대 팀 주장을 한 줄로 적어 보세요.
+            </p>
+        </div>
+
+        <!-- 한 줄 오류/상태 안내 메시지 레이어 -->
+        <div id="error-toast" class="opacity-0 transition-opacity duration-300 absolute bottom-4 bg-rose-600 text-white font-bold text-lg md:text-xl px-6 py-3 rounded-full shadow-lg pointer-events-none">
+            안내 메시지 영역
+        </div>
+    </main>
+
+    <!-- 3. 하단: 조작 버튼 3개 (최소 80px~90px 높이, 모바일 터치 최적화) -->
+    <footer class="w-full grid grid-cols-3 gap-3 md:gap-6 h-24 md:h-28">
+        <!-- 시작 / 일시정지 버튼 -->
+        <button id="btn-toggle" onclick="toggleTimer()" class="btn-touch bg-emerald-600 hover:bg-emerald-500 text-white font-black text-2xl md:text-4xl rounded-2xl shadow-lg border-b-4 border-emerald-800 active:border-b-0 flex items-center justify-center h-full">
+            ▶ 시작
+        </button>
+
+        <!-- 다음 차례 버튼 -->
+        <button id="btn-next" onclick="nextStep()" class="btn-touch bg-sky-600 hover:bg-sky-500 text-white font-black text-2xl md:text-4xl rounded-2xl shadow-lg border-b-4 border-sky-800 active:border-b-0 flex items-center justify-center h-full">
+            ⏭ 다음 차례
+        </button>
+
+        <!-- 다시 하기 버튼 -->
+        <button id="btn-reset" onclick="resetTimer()" class="btn-touch bg-slate-600 hover:bg-slate-500 text-white font-black text-2xl md:text-4xl rounded-2xl shadow-lg border-b-4 border-slate-700 active:border-b-0 flex items-center justify-center h-full">
+            🔄 다시 하기
+        </button>
+    </footer>
+
+    <!-- 안내 오버레이 모달 (알림창 alert 대신 사용) -->
+    <div id="modal-overlay" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-6 z-50">
+        <div class="bg-slate-800 border-4 border-sky-500 rounded-3xl p-8 max-w-2xl w-full text-center shadow-2xl fade-in flex flex-col items-center">
+            <div id="modal-title" class="text-3xl md:text-4xl font-extrabold text-amber-400 mb-4">
+                🔔 안내
+            </div>
+            <div id="modal-message" class="text-2xl md:text-4xl font-bold text-white leading-relaxed mb-8">
+                시간 끝. 마지막 문장을 마무리하세요.
+            </div>
+            <button id="modal-close-btn" onclick="closeModal()" class="btn-touch bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-2xl md:text-3xl px-10 py-4 rounded-2xl shadow-lg border-b-4 border-sky-800">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 토론 5단계 구조 데이터 정의
+        const STEPS = [
+            { id: 1, name: '1. 찬성 주장', duration: 120, nextText: '다음: 반대 주장' },
+            { id: 2, name: '2. 반대 주장', duration: 120, nextText: '다음: 찬성 반론' },
+            { id: 3, name: '3. 찬성 반론', duration: 60,  nextText: '다음: 반대 반론' },
+            { id: 4, name: '4. 반대 반론', duration: 60,  nextText: '다음: 상대 주장 한 줄 요약' },
+            { id: 5, name: '5. 상대 주장 한 줄 요약', duration: 60, nextText: '다음: 없음' }
+        ];
+
+        // 상태 변수
+        let currentStepIndex = 0;
+        let remainingSeconds = STEPS[0].duration;
+        let timerInterval = null;
+        let isRunning = false;
+        let isDebouncing = false; // 중복 클릭 방지 락
+        let autoModalTimeout = null;
+
+        // DOM 요소 참조
+        const stepNameEl = document.getElementById('step-name');
+        const nextStepInfoEl = document.getElementById('next-step-info');
+        const timerDisplayEl = document.getElementById('timer-display');
+        const btnToggleEl = document.getElementById('btn-toggle');
+        const summaryHintEl = document.getElementById('summary-hint');
+        const errorToastEl = document.getElementById('error-toast');
+        const modalOverlayEl = document.getElementById('modal-overlay');
+        const modalMessageEl = document.getElementById('modal-message');
+
+        // 페이지 로드 초기화
+        window.onload = function() {
+            updateUI();
+        };
+
+        // UI 갱신 함수
+        function updateUI() {
+            const currentStep = STEPS[currentStepIndex];
+            
+            // 단계명 및 다음 단계 안내 표시
+            stepNameEl.innerText = currentStep.name;
+            nextStepInfoEl.innerText = `(${currentStep.nextText})`;
+
+            // 타이머 시간 포맷 (MM:SS)
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            timerDisplayEl.innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            // 시작 / 일시정지 버튼 텍스트 변경 및 색상 연출
+            if (isRunning) {
+                btnToggleEl.innerText = '⏸ 일시정지';
+                btnToggleEl.className = btnToggleEl.className.replace('bg-emerald-600 hover:bg-emerald-500 border-emerald-800', 'bg-amber-600 hover:bg-amber-500 border-amber-800');
+            } else {
+                btnToggleEl.innerText = '▶ 시작';
+                btnToggleEl.className = btnToggleEl.className.replace('bg-amber-600 hover:bg-amber-500 border-amber-800', 'bg-emerald-600 hover:bg-emerald-500 border-emerald-800');
+            }
+
+            // 5단계 전용 안내 문구 노출 제어
+            if (currentStep.id === 5) {
+                summaryHintEl.classList.remove('hidden');
+            } else {
+                summaryHintEl.classList.add('hidden');
+            }
+        }
+
+        // 중복 클릭 방지 (데바운싱 헬퍼)
+        function checkDebounce() {
+            if (isDebouncing) return true;
+            isDebouncing = true;
+            setTimeout(() => { isDebouncing = false; }, 250);
+            return false;
+        }
+
+        // 한 줄 오류/상태 Toast 안내
+        let toastTimeout = null;
+        function showErrorToast(message) {
+            errorToastEl.innerText = message;
+            errorToastEl.classList.remove('opacity-0');
+            errorToastEl.classList.add('opacity-100');
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                errorToastEl.classList.remove('opacity-100');
+                errorToastEl.classList.add('opacity-0');
+            }, 2500);
+        }
+
+        // 시작 / 일시정지 토글
+        function toggleTimer() {
+            if (checkDebounce()) return;
+
+            // 이미 종료된 토론인 경우
+            if (currentStepIndex >= STEPS.length) {
+                showErrorToast('⚠️ 이미 토론이 완료된 상태입니다. 다시 하기를 눌러주세요.');
+                return;
+            }
+
+            if (isRunning) {
+                pauseTimer();
+            } else {
+                if (remainingSeconds <= 0) {
+                    showErrorToast('⚠️ 시간이 종료되었습니다. [다음 차례]를 눌러주세요.');
+                    return;
+                }
+                startTimer();
+            }
+        }
+
+        // 타이머 시작
+        function startTimer() {
+            if (isRunning) return;
+            isRunning = true;
+
+            // 1초 간격 카운트다운
+            timerInterval = setInterval(() => {
+                if (remainingSeconds > 0) {
+                    remainingSeconds--;
+                    updateUI();
+                }
+
+                if (remainingSeconds === 0) {
+                    handleTimeUp();
+                }
+            }, 1000);
+
+            updateUI();
+        }
+
+        // 타이머 일시정지
+        function pauseTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            isRunning = false;
+            updateUI();
+        }
+
+        // 시간 종료 처리 (0:00 도달 시)
+        function handleTimeUp() {
+            pauseTimer();
+
+            const isLastStep = (currentStepIndex === STEPS.length - 1);
+
+            if (!isLastStep) {
+                // 1~4단계 시간 종료 처리
+                showModal('시간 끝. 마지막 문장을 마무리하세요.');
+                
+                // 2초 후 메시지 자동 닫힘 및 다음 단계 전환
+                autoModalTimeout = setTimeout(() => {
+                    closeModal();
+                    moveToStep(currentStepIndex + 1);
+                }, 2000);
+            } else {
+                // 5단계 시간 종료 처리
+                showModal('토론이 끝났습니다.\n요약한 문장을 짝과 바꿔 읽어 보세요.');
+                currentStepIndex = STEPS.length; // 토론 완료 상태로 변경
+            }
+        }
+
+        // 다음 차례 이동
+        function nextStep() {
+            if (checkDebounce()) return;
+
+            if (currentStepIndex >= STEPS.length - 1) {
+                if (currentStepIndex === STEPS.length - 1) {
+                    // 5단계에서 다음 차례를 눌렀을 때 토론 종료 안내
+                    pauseTimer();
+                    showModal('토론이 끝났습니다.\n요약한 문장을 짝과 바꿔 읽어 보세요.');
+                    currentStepIndex = STEPS.length;
+                } else {
+                    showErrorToast('⚠️ 이미 마지막 단계입니다. 더 이상 이동할 수 없습니다.');
+                }
+                return;
+            }
+
+            // 앞 단계 타이머 즉시 정지 후 다음 단계로 전환
+            pauseTimer();
+            moveToStep(currentStepIndex + 1);
+        }
+
+        // 지정 단계로 이동 (정지 상태 유지)
+        function moveToStep(stepIdx) {
+            if (stepIdx < STEPS.length) {
+                currentStepIndex = stepIdx;
+                remainingSeconds = STEPS[currentStepIndex].duration;
+                updateUI();
+            }
+        }
+
+        // 리셋 (다시 하기)
+        function resetTimer() {
+            if (checkDebounce()) return;
+
+            // 실행 중인 타이머 및 모달 자동 타임아웃 해제
+            pauseTimer();
+            if (autoModalTimeout) {
+                clearTimeout(autoModalTimeout);
+                autoModalTimeout = null;
+            }
+            closeModal();
+
+            // 1단계 초기 정지 상태로 리셋
+            currentStepIndex = 0;
+            remainingSeconds = STEPS[0].duration;
+            updateUI();
+        }
+
+        // 모달 띄우기
+        function showModal(msg) {
+            modalMessageEl.innerText = msg;
+            modalOverlayEl.classList.remove('hidden');
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            if (autoModalTimeout) {
+                clearTimeout(autoModalTimeout);
+                autoModalTimeout = null;
+            }
+            modalOverlayEl.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘의 수학 공부 - 각도기 사용하기</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 교실 TV용 가독성 및 디자인 설정 */
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f8fafc;
+            user-select: none;
+        }
+        /* 최소 글자 크기 32px 강제 적용 (Tailwind text-4xl 이상급) */
+        .tv-title {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+        }
+        .tv-goal {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+        }
+        .tv-text {
+            font-size: clamp(2rem, 3.5vw, 2.5rem);
+            font-weight: 600;
+        }
+        .tv-button-text {
+            font-size: clamp(1.8rem, 3vw, 2.2rem);
+            font-weight: 700;
+        }
+        .tv-count {
+            font-size: clamp(2.2rem, 3.5vw, 2.8rem);
+            font-weight: 800;
+        }
+        /* 클릭 효과 */
+        .btn-active:active {
+            transform: scale(0.96);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between p-6 md:p-10 bg-slate-50 text-slate-900 overflow-hidden">
+
+    <!-- [상단] 제목 및 오늘의 학습 목표 -->
+    <header class="w-full text-center bg-indigo-900 text-white p-6 md:p-8 rounded-3xl shadow-lg flex flex-col justify-center items-center gap-3">
+        <h1 class="text-indigo-200 text-2xl md:text-3xl font-bold tracking-wide">
+            [ 오늘의 수학 공부 ]
+        </h1>
+        <div class="w-full border-t border-indigo-700 my-1"></div>
+        <div class="tv-goal text-yellow-300 leading-tight">
+            🎯 각도기로 각의 크기를 잴 수 있어요
+        </div>
+    </header>
+
+    <!-- [가운데] 오늘 할 활동 3개 -->
+    <main class="w-full my-auto py-4">
+        <div class="max-w-6xl mx-auto flex flex-col gap-4 md:gap-6">
+            
+            <!-- 활동 1 -->
+            <div class="bg-white border-4 border-indigo-200 rounded-2xl p-5 md:p-6 shadow-md flex items-center gap-6">
+                <span class="bg-indigo-600 text-white rounded-xl px-5 py-2 tv-text flex-shrink-0 font-bold">
+                    활동 1
+                </span>
+                <span class="tv-text text-slate-800">
+                    각도기 놓는 법 보기
+                </span>
+            </div>
+
+            <!-- 활동 2 -->
+            <div class="bg-white border-4 border-indigo-200 rounded-2xl p-5 md:p-6 shadow-md flex items-center gap-6">
+                <span class="bg-indigo-600 text-white rounded-xl px-5 py-2 tv-text flex-shrink-0 font-bold">
+                    활동 2
+                </span>
+                <span class="tv-text text-slate-800">
+                    교과서의 각 3개 재기
+                </span>
+            </div>
+
+            <!-- 활동 3 -->
+            <div class="bg-white border-4 border-indigo-200 rounded-2xl p-5 md:p-6 shadow-md flex items-center gap-6">
+                <span class="bg-indigo-600 text-white rounded-xl px-5 py-2 tv-text flex-shrink-0 font-bold">
+                    활동 3
+                </span>
+                <span class="tv-text text-slate-800">
+                    짝과 잰 값 비교하기
+                </span>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- [하단] 스스로 확인하기 버튼 (알아요 / 조금 / 몰라요) & 다시 하기 버튼 -->
+    <footer class="w-full bg-slate-200/80 p-6 rounded-3xl shadow-inner flex flex-col md:flex-row items-center justify-between gap-6">
+        
+        <!-- 점검 버튼 3개 (색상 및 명확한 글자 표기) -->
+        <div class="grid grid-cols-3 gap-4 md:gap-8 w-full md:w-4/5">
+            
+            <!-- 😀 알아요 -->
+            <button onclick="increaseCount('know')" class="btn-active bg-emerald-100 border-4 border-emerald-500 hover:bg-emerald-200 text-emerald-950 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-md transition-all">
+                <span class="tv-button-text flex items-center gap-2">
+                    😀 알아요
+                </span>
+                <div class="bg-emerald-600 text-white rounded-xl px-6 py-1 tv-count min-w-[3ch] text-center">
+                    <span id="count-know">0</span>명
+                </div>
+            </button>
+
+            <!-- 🤔 조금 -->
+            <button onclick="increaseCount('soso')" class="btn-active bg-amber-100 border-4 border-amber-500 hover:bg-amber-200 text-amber-950 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-md transition-all">
+                <span class="tv-button-text flex items-center gap-2">
+                    🤔 조금
+                </span>
+                <div class="bg-amber-600 text-white rounded-xl px-6 py-1 tv-count min-w-[3ch] text-center">
+                    <span id="count-soso">0</span>명
+                </div>
+            </button>
+
+            <!-- 😥 몰라요 -->
+            <button onclick="increaseCount('dontknow')" class="btn-active bg-rose-100 border-4 border-rose-500 hover:bg-rose-200 text-rose-950 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-md transition-all">
+                <span class="tv-button-text flex items-center gap-2">
+                    😥 몰라요
+                </span>
+                <div class="bg-rose-600 text-white rounded-xl px-6 py-1 tv-count min-w-[3ch] text-center">
+                    <span id="count-dontknow">0</span>명
+                </div>
+            </button>
+
+        </div>
+
+        <!-- 다시 하기 버튼 -->
+        <div class="w-full md:w-1/5 flex justify-end">
+            <button onclick="resetCounts()" class="btn-active bg-slate-700 hover:bg-slate-800 border-4 border-slate-900 text-white rounded-2xl p-4 w-full h-full flex flex-col items-center justify-center gap-1 shadow-md transition-all">
+                <span class="text-3xl">🔄</span>
+                <span class="tv-button-text">다시 하기</span>
+            </button>
+        </div>
+
+    </footer>
+
+    <!-- 자바스크립트: 버튼 누름 카운트 및 초기화 기능 -->
+    <script>
+        // 카운트 데이터 상태 관리 (학생 정보 저장 없이 메모리에서만 동작)
+        const counts = {
+            know: 0,
+            soso: 0,
+            dontknow: 0
+        };
+
+        /**
+         * 버튼 클릭 시 숫자를 1씩 증가시키는 함수
+         * @param {string} type - 'know', 'soso', 'dontknow' 중 하나
+         */
+        function increaseCount(type) {
+            if (counts.hasOwnProperty(type)) {
+                counts[type] += 1;
+                document.getElementById(`count-${type}`).textContent = counts[type];
+            } else {
+                // 오동작 시 원인 안내 메시지
+                console.error("잘못된 버튼 타입이 전달되었습니다.");
+            }
+        }
+
+        /**
+         * 모든 숫자를 0으로 초기화하는 함수
+         */
+        function resetCounts() {
+            counts.know = 0;
+            counts.soso = 0;
+            counts.dontknow = 0;
+
+            document.getElementById('count-know').textContent = '0';
+            document.getElementById('count-soso').textContent = '0';
+            document.getElementById('count-dontknow').textContent = '0';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘의 국어</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 교실 뒤에서도 잘 보이도록 기본 폰트 크기 및 높이 설정 */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* 스크롤 없이 한 화면에 맞춤 */="bg-white font-sans">
+    </style>
+    <style>
+        /* 텍스트 크기 가이드라인 (최소 32px 이상) */
+        .text-title {
+            font-size: clamp(32px, 3.5vw, 48px);
+        }
+        .text-goal {
+            font-size: clamp(40px, 4.5vw, 72px);
+        }
+        .text-btn-icon {
+            font-size: clamp(64px, 8vw, 120px);
+        }
+        .text-btn {
+            font-size: clamp(36px, 4vw, 56px);
+        }
+        
+        /* 버튼 최소 크기 및 비율 보장 */
+        .btn-xl {
+            min-height: 240px;
+            border-width: 6px;
+            transition: transform 0.1s ease-in-out;
+        }
+        
+        /* 클릭 시 0.5초 동안 커졌다가 돌아오는 애니메이션 */
+        .btn-clicked {
+            animation: pulse-grow 0.5s ease-in-out;
+        }
+
+        @keyframes pulse-grow {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between items-center p-6 lg:p-10 text-black min-h-screen bg-white">
+
+    <!-- [상단] 제목 및 오늘의 목표 (화면에서 가장 크고 굵게 표시) -->
+    <header class="w-full text-center mt-2">
+        <h1 class="text-title font-bold text-gray-800 mb-2 tracking-tight">
+            오늘의 국어
+        </h1>
+        <p class="text-goal font-black text-black leading-tight tracking-tight underline underline-offset-8 decoration-gray-400">
+            받침 없는 글자를 바르게 읽고 쓸 수 있어요
+        </p>
+    </header>
+
+    <!-- [중앙] 그림 버튼 3개 (바탕색 변경, 그림은 글자보다 2배 크게 위로 배치, 아래 카운트 표시) -->
+    <main class="w-full max-w-7xl my-auto">
+        <div class="grid grid-cols-3 gap-6 lg:gap-10 w-full">
+            
+            <!-- 버튼 1: 알아요 (연한 초록) -->
+            <div class="flex flex-col items-center">
+                <button type="button" id="btn-know" onclick="countUp('know')" class="w-full btn-xl bg-emerald-100 hover:bg-emerald-200 text-black font-extrabold rounded-3xl border-emerald-500 shadow-md flex flex-col items-center justify-center gap-2 p-6 cursor-pointer">
+                    <span class="text-btn-icon leading-none">😀</span>
+                    <span class="text-btn whitespace-nowrap mt-2">알아요</span>
+                </button>
+                <!-- 누른 인원수 표시 -->
+                <div id="count-know" class="text-goal font-black mt-4 text-black">0명</div>
+            </div>
+
+            <!-- 버튼 2: 조금 (연한 노랑) -->
+            <div class="flex flex-col items-center">
+                <button type="button" id="btn-little" onclick="countUp('little')" class="w-full btn-xl bg-amber-100 hover:bg-amber-200 text-black font-extrabold rounded-3xl border-amber-400 shadow-md flex flex-col items-center justify-center gap-2 p-6 cursor-pointer">
+                    <span class="text-btn-icon leading-none">🤔</span>
+                    <span class="text-btn whitespace-nowrap mt-2">조금</span>
+                </button>
+                <!-- 누른 인원수 표시 -->
+                <div id="count-little" class="text-goal font-black mt-4 text-black">0명</div>
+            </div>
+
+            <!-- 버튼 3: 몰라요 (연한 주황) -->
+            <div class="flex flex-col items-center">
+                <button type="button" id="btn-dontknow" onclick="countUp('dontknow')" class="w-full btn-xl bg-orange-100 hover:bg-orange-200 text-black font-extrabold rounded-3xl border-orange-400 shadow-md flex flex-col items-center justify-center gap-2 p-6 cursor-pointer">
+                    <span class="text-btn-icon leading-none">😥</span>
+                    <span class="text-btn whitespace-nowrap mt-2">몰라요</span>
+                </button>
+                <!-- 누른 인원수 표시 -->
+                <div id="count-dontknow" class="text-goal font-black mt-4 text-black">0명</div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- [하단] 다시 하기 버튼 -->
+    <footer class="w-full text-center mb-2">
+        <button type="button" onclick="resetCounts()" class="bg-gray-200 hover:bg-gray-300 text-black font-extrabold text-title px-14 py-5 rounded-2xl border-4 border-black active:bg-gray-400 transition-colors cursor-pointer">
+            다시 하기
+        </button>
+    </footer>
+
+    <!-- 자바스크립트 카운트 및 애니메이션 로직 -->
+    <script>
+        // 각 버튼의 카운트 상태 관리
+        const counts = {
+            know: 0,
+            little: 0,
+            dontknow: 0
+        };
+
+        // 버튼 클릭 시 숫자를 올리고 애니메이션 효과 적용
+        function countUp(type) {
+            counts[type]++;
+            const countElement = document.getElementById(`count-${type}`);
+            const btnElement = document.getElementById(`btn-${type}`);
+
+            // 텍스트 업데이트
+            countElement.textContent = `${counts[type]}명`;
+
+            // 0.5초 커지는 애니메이션 효과
+            btnElement.classList.remove('btn-clicked');
+            void btnElement.offsetWidth; // Reflow 발생시켜 애니메이션 재트리거
+            btnElement.classList.add('btn-clicked');
+        }
+
+        // 초기화 기능 (다시 하기 버튼)
+        function resetCounts() {
+            counts.know = 0;
+            counts.little = 0;
+            counts.dontknow = 0;
+
+            document.getElementById('count-know').textContent = '0명';
+            document.getElementById('count-little').textContent = '0명';
+            document.getElementById('count-dontknow').textContent = '0명';
+        }
+    </script>
+
+</body>
+</html>

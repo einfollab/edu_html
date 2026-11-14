@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>일차함수 그래프 탐구</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 기본 인터페이스 폰트 및 스크롤 방지 */
+    body {
+      font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow: hidden;
+      background-color: #0f172a; /* 진한 남색 */
+      color: #ffffff;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* 커스텀 슬라이더 (밀대) 스타일 - 교실 TV 터치 및 마우스 드래그에 최적화 (2cm 이상 크기) */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+    }
+
+    input[type=range]:focus {
+      outline: none;
+    }
+
+    /* 슬라이더 트랙 */
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 24px;
+      cursor: pointer;
+      background: #334155;
+      border-radius: 12px;
+      border: 2px solid #64748b;
+    }
+
+    /* 슬라이더 손잡이 (가로세로 80px 이상 -> 2cm 초과 대형 크기) */
+    input[type=range]::-webkit-slider-thumb {
+      height: 80px;
+      width: 80px;
+      border-radius: 50%;
+      background: #ffffff;
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -29px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      border: 6px solid #0284c7;
+      transition: transform 0.1s ease, background-color 0.1s ease;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover,
+    input[type=range]::-webkit-slider-thumb:active {
+      transform: scale(1.1);
+      background: #e0f2fe;
+    }
+
+    /* Firefox 슬라이더 지원 */
+    input[type=range]::-moz-range-track {
+      width: 100%;
+      height: 24px;
+      cursor: pointer;
+      background: #334155;
+      border-radius: 12px;
+      border: 2px solid #64748b;
+    }
+    input[type=range]::-moz-range-thumb {
+      height: 80px;
+      width: 80px;
+      border-radius: 50%;
+      background: #ffffff;
+      cursor: pointer;
+      border: 6px solid #0284c7;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* 캔버스 래퍼 */
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body class="flex flex-col h-screen w-screen p-4 gap-4 bg-slate-900">
+
+  <!-- [상단 영역] 학습 목표 및 현재 식 (32px 이상 크고 선명한 글자) -->
+  <header class="flex flex-col items-center justify-center bg-slate-800 rounded-2xl p-4 border border-slate-700 shrink-0">
+    <!-- 오늘의 학습 목표 -->
+    <h1 class="text-3xl lg:text-4xl font-bold text-white text-center leading-snug">
+      목표: 일차함수 y = ax + b에서 a와 b가 그래프를 어떻게 바꾸는지 설명할 수 있다
+    </h1>
+    <!-- 현재 함수 수식 표시 -->
+    <div class="mt-2 text-4xl lg:text-5xl font-black text-amber-400 tracking-wider" id="equation-display">
+      y = 2x + 1
+    </div>
+  </header>
+
+  <!-- [메인 콘텐츠 영역] 좌: 좌표평면 / 우: 조작 밀대 컨트롤 -->
+  <main class="flex-1 grid grid-cols-12 gap-6 min-h-0">
+    
+    <!-- [왼쪽] 좌표평면 (8/12) -->
+    <section class="col-span-7 flex flex-col h-full">
+      <div class="canvas-container flex-1">
+        <canvas id="graphCanvas"></canvas>
+      </div>
+    </section>
+
+    <!-- [오른쪽] 밀대 컨트롤 및 안내 메시지 (5/12) -->
+    <section class="col-span-5 flex flex-col justify-between bg-slate-800 rounded-2xl p-6 border border-slate-700">
+      
+      <!-- 컨트롤 박스 모음 -->
+      <div class="flex flex-col gap-8 justify-center flex-1">
+        
+        <!-- 기울기 a 밀대 조작 -->
+        <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700 flex flex-col gap-3">
+          <div class="flex justify-between items-center">
+            <label for="slider-a" class="text-3xl font-bold text-white">기울기 a</label>
+            <span class="text-4xl font-extrabold text-cyan-400 bg-slate-800 px-4 py-1 rounded-lg border border-slate-600" id="val-a">2</span>
+          </div>
+          <div class="py-4">
+            <input type="range" id="slider-a" min="-3" max="3" step="0.5" value="2">
+          </div>
+        </div>
+
+        <!-- y절편 b 밀대 조작 -->
+        <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-700 flex flex-col gap-3">
+          <div class="flex justify-between items-center">
+            <label for="slider-b" class="text-3xl font-bold text-white">y절편 b</label>
+            <span class="text-4xl font-extrabold text-cyan-400 bg-slate-800 px-4 py-1 rounded-lg border border-slate-600" id="val-b">1</span>
+          </div>
+          <div class="py-4">
+            <input type="range" id="slider-b" min="-5" max="5" step="1" value="1">
+          </div>
+        </div>
+
+        <!-- 피드백 / 피드백 메시지 영역 (오류/안내) -->
+        <div id="feedback-message" class="text-2xl font-bold text-center text-slate-300 min-h-[40px] flex items-center justify-center">
+          밀대를 움직여 그래프의 변화를 관찰해 보세요.
+        </div>
+
+      </div>
+
+      <!-- [하단] 다시 하기 버튼 (대형 터치 영역, 가로세로 규격 충족) -->
+      <button id="reset-btn" class="w-full py-5 text-3xl font-black bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white rounded-xl border-2 border-slate-500 shadow-lg transition-all flex items-center justify-center gap-3 shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        다시 하기
+      </button>
+
+    </section>
+  </main>
+
+  <script>
+    // DOM 요소 가져오기
+    const canvas = document.getElementById('graphCanvas');
+    const ctx = canvas.getContext('2d');
+    const sliderA = document.getElementById('slider-a');
+    const sliderB = document.getElementById('slider-b');
+    const valA = document.getElementById('val-a');
+    const valB = document.getElementById('val-b');
+    const equationDisplay = document.getElementById('equation-display');
+    const resetBtn = document.getElementById('reset-btn');
+    const feedbackMessage = document.getElementById('feedback-message');
+
+    // 기본 설정값 (y = 2x + 1)
+    const INITIAL_A = 2;
+    const INITIAL_B = 1;
+    const GRID_RANGE = 6; // -6부터 6까지
+
+    // 소수점 기울기 분수 변환 함수
+    function formatA(a) {
+      if (a === 0) return '0';
+      const isNegative = a < 0;
+      const absA = Math.abs(a);
+
+      // 소수점 수치가 반분수(x.5)일 경우 분수로 변환
+      let fractionStr = '';
+      if (Number.isInteger(absA)) {
+        fractionStr = absA.toString();
+      } else {
+        const numerator = Math.round(absA * 2);
+        fractionStr = `${numerator}/2`;
+        // 주요 0.5 분수 유니코드 처리 (더 예쁜 교과서 표현)
+        if (absA === 0.5) fractionStr = '½';
+        else if (absA === 1.5) fractionStr = '³⁄₂';
+        else if (absA === 2.5) fractionStr = '⁵⁄₂';
+      }
+
+      if (fractionStr === '1') return isNegative ? '-' : '';
+      return isNegative ? `-${fractionStr}` : fractionStr;
+    }
+
+    // 초기화 및 리사이즈 처리
+    function initCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      drawGraph();
+    }
+
+    // 좌표 및 수치 계산 로직
+    function drawGraph() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
+
+      // 캔버스 초기화 (흰색 배경)
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+
+      // 중심점 (0,0) 위치 계산
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      // 1단위당 픽셀 간격 (Grid Size)
+      const stepX = width / (GRID_RANGE * 2);
+      const stepY = height / (GRID_RANGE * 2);
+
+      // 1. 눈금선 그리기 (1칸마다)
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#e2e8f0'; // 연한 회색
+
+      for (let i = -GRID_RANGE; i <= GRID_RANGE; i++) {
+        // 세로 눈금선
+        const x = centerX + i * stepX;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+
+        // 가로 눈금선
+        const y = centerY - i * stepY;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      // 2. x축 및 y축 그리기 (진한 회색/검정)
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#334155';
+
+      // x축
+      ctx.beginPath();
+      ctx.moveTo(0, centerY);
+      ctx.lineTo(width, centerY);
+      ctx.stroke();
+
+      // y축
+      ctx.beginPath();
+      ctx.moveTo(centerX, 0);
+      ctx.lineTo(centerX, height);
+      ctx.stroke();
+
+      // 3. 축 눈금 숫자 표시 (-6부터 6까지)
+      ctx.fillStyle = '#475569';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+
+      for (let i = -GRID_RANGE; i <= GRID_RANGE; i++) {
+        if (i !== 0) {
+          // x축 숫자
+          const x = centerX + i * stepX;
+          ctx.fillText(i.toString(), x, centerY + 8);
+
+          // y축 숫자
+          const y = centerY - i * stepY;
+          ctx.save();
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(i.toString(), centerX - 8, y);
+          ctx.restore();
+        }
+      }
+
+      // 원점 '0' 표시
+      ctx.fillText('0', centerX - 12, centerY + 8);
+
+      // 4. 일차함수 직선 그리기 (좌표평면 영역 내부로 제한: Clipping)
+      const a = parseFloat(sliderA.value);
+      const b = parseFloat(sliderB.value);
+
+      ctx.save();
+      // 좌표평면 영역만 캡처하여 바깥으로 삐져나가지 않도록 제한
+      ctx.beginPath();
+      ctx.rect(0, 0, width, height);
+      ctx.clip();
+
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = '#0284c7'; // 포인트 파란색 선
+
+      // 충분히 큰 x 범위를 잡아 화면 끝까지 연결
+      const xStart = -GRID_RANGE * 3;
+      const yStart = a * xStart + b;
+      const xEnd = GRID_RANGE * 3;
+      const yEnd = a * xEnd + b;
+
+      const canvasX1 = centerX + xStart * stepX;
+      const canvasY1 = centerY - yStart * stepY;
+      const canvasX2 = centerX + xEnd * stepX;
+      const canvasY2 = centerY - yEnd * stepY;
+
+      ctx.beginPath();
+      ctx.moveTo(canvasX1, canvasY1);
+      ctx.lineTo(canvasX2, canvasY2);
+      ctx.stroke();
+
+      // 5. y절편 점 표시 (b점 강조)
+      const yInterceptX = centerX;
+      const yInterceptY = centerY - b * stepY;
+
+      ctx.fillStyle = '#f59e0b'; // 황금색 점
+      ctx.beginPath();
+      ctx.arc(yInterceptX, yInterceptY, 9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // 교과서 표기법 규칙대로 식 텍스트 업데이트
+    function updateEquation() {
+      const a = parseFloat(sliderA.value);
+      const b = parseFloat(sliderB.value);
+
+      // 슬라이더 옆 숫자 표시 업데이트 (분수 표현 적용)
+      valA.textContent = Math.abs(a % 1) === 0.5 ? formatA(a) : a;
+      valB.textContent = b;
+
+      let eqStr = 'y = ';
+
+      if (a === 0) {
+        // a가 0이면 x항 생략
+        eqStr += `${b}`;
+        feedbackMessage.textContent = 'a = 0 이므로 기울어지지 않은 평평한 직선이에요!';
+        feedbackMessage.className = 'text-2xl font-bold text-center text-amber-300 min-h-[40px] flex items-center justify-center';
+      } else {
+        // a항 표시
+        const formattedA = formatA(a);
+        eqStr += `${formattedA}x`;
+
+        // b항 표시
+        if (b > 0) {
+          eqStr += ` + ${b}`;
+        } else if (b < 0) {
+          eqStr += ` - ${Math.abs(b)}`;
+        }
+
+        feedbackMessage.textContent = 'a는 기울어진 정도, b는 y축과 만나는 점을 뜻해요.';
+        feedbackMessage.className = 'text-2xl font-bold text-center text-slate-300 min-h-[40px] flex items-center justify-center';
+      }
+
+      equationDisplay.textContent = eqStr;
+      drawGraph();
+    }
+
+    // 다시 하기 버튼 클릭 이벤트
+    function resetToInitial() {
+      sliderA.value = INITIAL_A;
+      sliderB.value = INITIAL_B;
+      updateEquation();
+    }
+
+    // 이벤트 리스너 등록
+    sliderA.addEventListener('input', updateEquation);
+    sliderB.addEventListener('input', updateEquation);
+    resetBtn.addEventListener('click', resetToInitial);
+    window.addEventListener('resize', initCanvas);
+
+    // 초기화 실행
+    window.onload = () => {
+      initCanvas();
+      updateEquation();
+    };
+  </script>
+</body>
+</html>
