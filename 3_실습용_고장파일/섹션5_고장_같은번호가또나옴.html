@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>초등 국어 발표 뽑기 프로그램</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body {
+            font-family: 'Pretendard', sans-serif;
+            overflow: hidden; /* 스크롤 없이 한 화면 유지 */
+            user-select: none;
+        }
+        /* 버튼 최소 크기 규격 확보 (가로세로 2cm 이상 - 일반 화면 약 80px 이상) */
+        .min-btn-size {
+            min-width: 140px;
+            min-height: 70px;
+        }
+        /* 애니메이션 효과 */
+        .bounce-in {
+            animation: bounceIn 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-amber-50 h-screen w-screen flex flex-col justify-between p-6 md:p-8">
+
+    <!-- [위] 오늘의 목표 한 문장 (32px 이상) -->
+    <header class="bg-emerald-600 text-white rounded-3xl p-6 shadow-md text-center">
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
+            목표: 오늘 배운 낱말을 넣어서 내 생각을 말할 수 있어요
+        </h1>
+    </header>
+
+    <!-- [가운데] 왼쪽: 뽑힌 번호 숫자 칸 / 오른쪽: 질문 카드 -->
+    <main class="grid grid-cols-12 gap-6 my-auto items-stretch flex-grow pt-6 pb-6" style="max-height: calc(100vh - 220px);">
+        <!-- 가운데 왼쪽: 뽑힌 번호를 보여 줄 큰 숫자 칸 -->
+        <section class="col-span-4 bg-white rounded-3xl border-4 border-amber-300 shadow-xl flex flex-col justify-center items-center p-6 relative overflow-hidden">
+            <span class="text-2xl font-bold text-amber-700 absolute top-6 left-6 bg-amber-100 px-4 py-2 rounded-xl">
+                학생 번호
+            </span>
+            <!-- 숫자만 크게 표시 (글자 32px 이상) -->
+            <div id="numberDisplay" class="text-9xl md:text-[11rem] font-black text-amber-600 transition-all duration-200 my-auto text-center">
+                ?
+            </div>
+            <!-- 숫자 칸 바로 아래: 남은 번호 수 -->
+            <div id="remainingDisplay" class="text-3xl md:text-4xl font-extrabold text-amber-800 bg-amber-100 px-6 py-2 rounded-2xl mt-auto">
+                남은 번호: 30개
+            </div>
+        </section>
+
+        <!-- 가운데 오른쪽: 뽑힌 질문을 보여 줄 질문 카드 -->
+        <section class="col-span-8 bg-white rounded-3xl border-4 border-emerald-300 shadow-xl flex flex-col justify-center items-center p-8 relative overflow-hidden">
+            <span class="text-2xl font-bold text-emerald-700 absolute top-6 left-6 bg-emerald-100 px-4 py-2 rounded-xl">
+                발표 질문
+            </span>
+            <!-- 질문 카드 안에는 질문만 크게 표시 (글자 32px 이상) -->
+            <div id="questionDisplay" class="text-3xl md:text-5xl font-bold text-gray-800 text-center leading-relaxed px-4">
+                여기에 질문이 나와요
+            </div>
+        </section>
+    </main>
+
+    <!-- 오류/안내 메시지 레이어 (오류 발생 시 한 줄로 안내) -->
+    <div id="errorMessage" class="text-red-600 text-2xl font-bold text-center h-8 mb-2 opacity-0 transition-opacity duration-200">
+        <!-- 오류 내용 표시 영역 -->
+    </div>
+
+    <!-- [아래] 입력칸, 뽑기 버튼, 다시 하기 버튼 -->
+    <footer class="bg-white rounded-3xl border-2 border-gray-200 p-4 shadow-lg flex items-center justify-between gap-4">
+        <!-- 우리 반은 몇 번까지? 입력칸 -->
+        <div class="flex items-center gap-3">
+            <label for="maxStudentInput" class="text-2xl md:text-3xl font-bold text-gray-700 whitespace-nowrap">
+                우리 반은 몇 번까지?
+            </label>
+            <input 
+                type="number" 
+                id="maxStudentInput" 
+                value="30" 
+                min="1" 
+                max="99"
+                class="w-28 text-3xl md:text-4xl font-extrabold text-center border-4 border-amber-400 rounded-2xl p-2 bg-amber-50 focus:outline-none focus:ring-4 focus:ring-amber-300"
+            >
+        </div>
+
+        <!-- 버튼 영역 (가로세로 2cm 이상) -->
+        <div class="flex items-center gap-4">
+            <!-- 뽑기 버튼 -->
+            <button 
+                id="drawBtn" 
+                onclick="drawStudentAndQuestion()" 
+                class="min-btn-size px-8 py-4 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-3xl md:text-4xl font-black rounded-2xl shadow-md transition-all flex items-center justify-center cursor-pointer"
+            >
+                뽑기
+            </button>
+
+            <!-- 다시 하기 버튼 (순위표 대신 배치) -->
+            <button 
+                id="resetBtn" 
+                onclick="resetDraw()" 
+                class="min-btn-size px-8 py-4 bg-gray-400 hover:bg-gray-500 active:scale-95 text-white text-3xl md:text-4xl font-black rounded-2xl shadow-md transition-all flex items-center justify-center cursor-pointer"
+            >
+                다시 하기
+            </button>
+        </div>
+    </footer>
+
+    <script>
+        // 초등학교 2학년 국어 수업용 지정 질문 목록 5가지
+        const baseQuestions = [
+            "오늘 배운 낱말 하나 말하기",
+            "친구 생각에 내 생각 더하기",
+            "오늘 배운 낱말로 짧은 문장 만들기",
+            "오늘 배운 것 중 어려웠던 것 말하기",
+            "짝에게 오늘 배운 것 한 가지 알려 주기"
+        ];
+
+        const numberDisplay = document.getElementById('numberDisplay');
+        const questionDisplay = document.getElementById('questionDisplay');
+        const remainingDisplay = document.getElementById('remainingDisplay');
+        const maxStudentInput = document.getElementById('maxStudentInput');
+        const errorMessage = document.getElementById('errorMessage');
+
+        let studentPool = [];
+        let questionPool = [];
+        let isProcessing = false;
+
+        // 배열을 피셔-예이츠(Fisher-Yates) 방식으로 섞는 함수
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // 학생 번호 목록 초기화 및 셔플
+        function initStudentPool() {
+            const maxVal = parseInt(maxStudentInput.value);
+            if (isNaN(maxVal) || maxVal < 1 || maxVal > 99) {
+                return false;
+            }
+
+            const temp = [];
+            for (let i = 1; i <= maxVal; i++) {
+                temp.push(i);
+            }
+            studentPool = shuffleArray(temp);
+
+            updateRemainingCount();
+            return true;
+        }
+
+        // 질문 목록 초기화 및 셔플 (5개를 다 쓰면 다시 섞어서 채움)
+        function initQuestionPool() {
+            questionPool = shuffleArray(baseQuestions);
+        }
+
+        // 남은 번호 표시 업데이트
+        function updateRemainingCount() {
+            remainingDisplay.textContent = `남은 번호: ${studentPool.length}개`;
+        }
+
+        // 오류 메시지 출력 함수
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('opacity-0');
+            setTimeout(() => {
+                errorMessage.classList.add('opacity-0');
+            }, 3000);
+        }
+
+        // 다음 질문 뽑기 (질문 5개를 다 쓰면 다시 섞음)
+        function getNextQuestion() {
+            if (questionPool.length === 0) {
+                initQuestionPool();
+            }
+            return questionPool.pop();
+        }
+
+        // 뽑기 기능 (학생 번호 및 질문 중복 없이 뽑기)
+        function drawStudentAndQuestion() {
+            if (isProcessing) return; // 연속 클릭 방지
+
+            const maxVal = parseInt(maxStudentInput.value);
+
+            // 입력 검증 (틀리면 왜 틀렸는지 한 줄로 알림)
+            if (isNaN(maxVal) || maxVal < 1) {
+                showError("1 이상의 올바른 학생 번호를 입력해 주세요.");
+                return;
+            }
+            if (maxVal > 99) {
+                showError("학생 번호는 최대 99번까지만 입력할 수 있어요.");
+                return;
+            }
+
+            // 남은 번호가 없을 때 처리
+            if (studentPool.length === 0) {
+                numberDisplay.className = "text-3xl md:text-4xl font-bold text-amber-700 text-center px-2 my-auto";
+                numberDisplay.textContent = "모두 뽑았어요. 다시 하기를 눌러요.";
+                questionDisplay.textContent = "다시 하기를 눌러 처음부터 다시 시작하세요.";
+                return;
+            }
+
+            isProcessing = true;
+            errorMessage.classList.add('opacity-0');
+
+            // 번호 및 질문 추출
+            const pickedNum = studentPool[Math.floor(Math.random() * studentPool.length)];
+            const pickedQuestion = getNextQuestion();
+
+            // 화면 갱신 및 애니메이션 적용
+            numberDisplay.className = "text-9xl md:text-[11rem] font-black text-amber-600 transition-all duration-200 my-auto text-center";
+            numberDisplay.classList.remove('bounce-in');
+            questionDisplay.classList.remove('bounce-in');
+            
+            void numberDisplay.offsetWidth; // Reflow
+
+            numberDisplay.textContent = pickedNum;
+            questionDisplay.textContent = pickedQuestion;
+
+            numberDisplay.classList.add('bounce-in');
+            questionDisplay.classList.add('bounce-in');
+            
+            updateRemainingCount();
+
+            setTimeout(() => {
+                isProcessing = false;
+            }, 300);
+        }
+
+        // 다시 하기 기능
+        function resetDraw() {
+            isProcessing = false;
+            errorMessage.classList.add('opacity-0');
+            numberDisplay.className = "text-9xl md:text-[11rem] font-black text-amber-600 transition-all duration-200 my-auto text-center";
+            numberDisplay.textContent = '?';
+            questionDisplay.textContent = '여기에 질문이 나와요';
+            numberDisplay.classList.remove('bounce-in');
+            questionDisplay.classList.remove('bounce-in');
+            
+            initStudentPool();
+            initQuestionPool();
+        }
+
+        // 입력값이 바뀌면 자동 다시 섞기
+        maxStudentInput.addEventListener('change', () => {
+            const isValid = initStudentPool();
+            if (!isValid) {
+                showError("1~99 사이의 올바른 학생 번호를 입력해 주세요.");
+            } else {
+                resetDraw();
+            }
+        });
+
+        // 초기화 실행
+        initStudentPool();
+        initQuestionPool();
+    </script>
+</body>
+</html>

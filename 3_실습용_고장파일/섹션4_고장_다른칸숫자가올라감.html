@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘의 국어</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 초등학교 1학년 교실 TV 화면에 최적화된 기본 폰트 및 설정 */
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body {
+            font-family: 'Pretendard', sans-serif;
+            user-select: none; /* 아이들이 터치/클릭할 때 드래그되지 않도록 방지 */
+        }
+        /* 누를 때 0.5초 동안 살짝 커졌다 돌아오는 애니메이션 */
+        .click-pop {
+            animation: pop 0.5s ease-in-out;
+        }
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-white h-screen w-screen flex flex-col justify-between p-6 lg:p-10 overflow-hidden text-black">
+
+    <!-- [위] 제목 및 오늘의 목표 (목표가 화면에서 가장 크고 굵게 보이도록 설정) -->
+    <header class="text-center pt-2 flex flex-col items-center justify-center">
+        <!-- 제목 -->
+        <h1 class="text-3xl lg:text-4xl font-extrabold text-black mb-4 tracking-tight">
+            오늘의 국어
+        </h1>
+        
+        <!-- 목표 (화면에서 가장 크고 굵게, 교실 맨 뒤에서도 선명하게) -->
+        <div class="w-full max-w-6xl px-4">
+            <p class="text-5xl lg:text-7xl font-black text-black leading-tight tracking-tight break-keep">
+                받침 없는 글자를 바르게 읽고 쓸 수 있어요
+            </p>
+        </div>
+    </header>
+
+    <!-- [가운데] 그림 버튼 3개 (연한 초록 / 연한 노랑 / 연한 주황, 그림은 글자보다 2배 크게) -->
+    <main class="flex-1 flex items-center justify-center my-2">
+        <div class="grid grid-cols-3 gap-6 lg:gap-12 w-full max-w-7xl px-4">
+            
+            <!-- 버튼 1: 알아요 (연한 초록) -->
+            <div class="flex flex-col items-center">
+                <button type="button" onclick="countUp(this, 'count-1')" class="w-full flex flex-col items-center justify-center bg-emerald-100 border-4 border-emerald-400 rounded-3xl p-6 shadow-md min-h-[200px] lg:min-h-[240px] transition-transform active:scale-95">
+                    <span class="text-8xl lg:text-9xl mb-2">😀</span>
+                    <span class="text-3xl lg:text-4xl font-black text-black tracking-tight">알아요</span>
+                </button>
+                <div class="mt-4 text-4xl lg:text-5xl font-extrabold text-black tracking-tight">
+                    <span id="count-1">0</span>명
+                </div>
+            </div>
+
+            <!-- 버튼 2: 조금 (연한 노랑) -->
+            <div class="flex flex-col items-center">
+                <button type="button" onclick="countUp(this, 'count-2')" class="w-full flex flex-col items-center justify-center bg-yellow-100 border-4 border-yellow-400 rounded-3xl p-6 shadow-md min-h-[200px] lg:min-h-[240px] transition-transform active:scale-95">
+                    <span class="text-8xl lg:text-9xl mb-2">🤔</span>
+                    <span class="text-3xl lg:text-4xl font-black text-black tracking-tight">조금</span>
+                </button>
+                <div class="mt-4 text-4xl lg:text-5xl font-extrabold text-black tracking-tight">
+                    <span id="count-2">0</span>명
+                </div>
+            </div>
+
+            <!-- 버튼 3: 몰라요 (연한 주황) -->
+            <div class="flex flex-col items-center">
+                <button type="button" onclick="countUp(this, 'count-2')" class="w-full flex flex-col items-center justify-center bg-orange-100 border-4 border-orange-400 rounded-3xl p-6 shadow-md min-h-[200px] lg:min-h-[240px] transition-transform active:scale-95">
+                    <span class="text-8xl lg:text-9xl mb-2">😥</span>
+                    <span class="text-3xl lg:text-4xl font-black text-black tracking-tight">몰라요</span>
+                </button>
+                <div class="mt-4 text-4xl lg:text-5xl font-extrabold text-black tracking-tight">
+                    <span id="count-3">0</span>명
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- [아래] 다시 하기 버튼 -->
+    <footer class="text-center pb-2 flex justify-center items-center">
+        <button type="button" onclick="resetCounts()" class="bg-gray-900 text-white font-bold text-2xl lg:text-3xl py-4 px-10 rounded-2xl shadow-md border-2 border-black active:scale-95 transition-transform">
+            🔄 다시 하기
+        </button>
+    </footer>
+
+    <script>
+        // 버튼 누르면 숫자 1 증가 및 0.5초 커지는 효과
+        function countUp(buttonElem, countId) {
+            const countSpan = document.getElementById(countId);
+            let currentCount = parseInt(countSpan.innerText, 10);
+            countSpan.innerText = currentCount + 1;
+
+            // 0.5초 애니메이션 효과 적용
+            buttonElem.classList.remove('click-pop');
+            // reflow 발생시켜 애니메이션 재시작 가능하도록 설정
+            void buttonElem.offsetWidth;
+            buttonElem.classList.add('click-pop');
+        }
+
+        // 세 카운트 모두 0으로 리셋
+        function resetCounts() {
+            document.getElementById('count-1').innerText = '0';
+            document.getElementById('count-2').innerText = '0';
+            document.getElementById('count-3').innerText = '0';
+        }
+    </script>
+</body>
+</html>
